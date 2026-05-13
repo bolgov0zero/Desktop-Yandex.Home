@@ -169,8 +169,7 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
             <Star className="w-4 h-4 fill-current" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{device.name}</p>
-            {roomName && <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{roomName}</p>}
+            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{roomName ?? device.name}</p>
           </div>
         </div>
         <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 shrink-0">{readingText}</p>
