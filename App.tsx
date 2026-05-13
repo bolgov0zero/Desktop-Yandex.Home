@@ -573,7 +573,8 @@ function App() {
 const getTrayMenuItems = useCallback((
     data: YandexUserInfoResponse | null,
     favDevices: string[],
-    favScenarios: string[]
+    favScenarios: string[],
+    favProps: FavoriteProperty[]
 ): TrayMenuItem[] => {
     if (!data) return [];
 
@@ -582,56 +583,76 @@ const getTrayMenuItems = useCallback((
 
     const getRoomForDevice = (deviceId: string) => data?.rooms.find(r => r.devices.includes(deviceId));
 
-    // 1. Избранные устройства
+    // 1. Избранные устройства (целиком)
     const favDeviceItems: TrayMenuItem[] = favDevices
         .map(id => deviceMap.get(id))
         .filter((d): d is YandexDevice => !!d)
         .map(device => {
             const onOffCapability = device.capabilities.find(c => c.type === 'devices.capabilities.on_off');
             const isToggleable = !!onOffCapability;
-            
-            // Check if this is a sensor or smart meter device that should show sensor value
-            const deviceType = device.type.toLowerCase();
-            const isSensorOrMeter = deviceType.includes('sensor') || deviceType.includes('smart_meter');
-            
-            // Calculate sensor value for sensor/smart_meter devices
             let sensorValue: string | null = null;
-            if (isSensorOrMeter && !isToggleable) {
+            if (!isToggleable) {
                 sensorValue = formatSensorValueForTray(device);
             }
-            
             return {
                 id: device.id,
                 name: device.name,
                 type: 'device' as TrayItemType,
-                isToggleable: isToggleable,
+                isToggleable,
                 isOn: onOffCapability?.state?.value === true,
-                sensorValue: sensorValue,
+                sensorValue,
                 roomName: getRoomForDevice(device.id)?.name,
             };
         });
 
-    // 2. Избранные сценарии
-    const favScenarioItems: TrayMenuItem[] = favScenarios
-        .map(id => scenarioMap.get(id))
-        .filter((s): s is YandexScenario => !!s)
-        .map(scenario => ({
-            id: scenario.id,
-            name: scenario.name,
-            type: 'scenario' as TrayItemType,
-        }));
-        
-    return [...favDeviceItems, ...favScenarioItems];
+    // 2. Избранные отдельные показания (temperature/humidity)
+    const favPropItems: TrayMenuItem[] = favProps
+        .filter(fp => fp.property !== 'all')
+        .map(fp => {
+            const device = deviceMap.get(fp.deviceId);
+            if (!device) return null;
+            const props = device.properties ?? [];
+            const prop = props.find((p: any) =>
+                (p.parameters?.instance ?? p.state?.instance) === fp.property
+            ) as any;
+            if (!prop) return null;
+            const value = prop.state?.value;
+            const unit = prop.parameters?.unit === 'unit.temperature.celsius' ? ' °C'
+                : prop.parameters?.unit === 'unit.percent' ? ' %' : '';
+            const sensorValue = value !== undefined ? `${value}${unit}` : null;
+            const label = fp.property === 'temperature' ? 'Температура' : 'Влажность';
+            return {
+                id: `${fp.deviceId}-${fp.property}`,
+                name: `${device.name} (${label})`,
+                type: 'device' as TrayItemType,
+                isToggleable: false,
+                sensorValue,
+                roomName: getRoomForDevice(fp.deviceId)?.name,
+            };
+        })
+        .filter((x): x is TrayMenuItem => !!x);
+
+    // 3. Избранные сценарии
+    const favScenarioItems: TrayMenuItem[] = favScenarios
+        .map(id => scenarioMap.get(id))
+        .filter((s): s is YandexScenario => !!s)
+        .map(scenario => ({
+            id: scenario.id,
+            name: scenario.name,
+            type: 'scenario' as TrayItemType,
+        }));
+
+    return [...favDeviceItems, ...favPropItems, ...favScenarioItems];
 }, []);
 
 // --- 3. useEffect: Отправка данных избранного в главный процесс (для меню трея) ---
 useEffect(() => {
     if (appState === AppState.DASHBOARD && userData) {
-        const trayItems = getTrayMenuItems(userData, favoriteDeviceIds, favoriteScenarioIds);
+        const trayItems = getTrayMenuItems(userData, favoriteDeviceIds, favoriteScenarioIds, favoriteProperties);
         // Отправляем данные в главный процесс для обновления меню трея
         yandexApi.sendFavoritesToTray(trayItems);
     }
-}, [appState, userData, favoriteDeviceIds, favoriteScenarioIds, getTrayMenuItems]);
+}, [appState, userData, favoriteDeviceIds, favoriteScenarioIds, favoriteProperties, getTrayMenuItems]);
 
 
 // --- 4. useEffect: Обработка команд из трея ---

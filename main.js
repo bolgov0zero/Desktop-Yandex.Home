@@ -88,6 +88,15 @@ function createTray() {
     
     appTray.setToolTip('Управление Умным Домом Яндекс');
 
+    // Левый клик — меню избранного
+    appTray.on('click', () => {
+        const items = buildFavoriteMenuItems();
+        const favoritesMenu = Menu.buildFromTemplate(
+            items.length > 0 ? items : [{ label: 'Нет избранного', enabled: false }]
+        );
+        appTray.popUpContextMenu(favoritesMenu);
+    });
+
     // Правый клик — Открыть / Закрыть
     appTray.on('right-click', () => {
         const menu = Menu.buildFromTemplate([
@@ -112,8 +121,6 @@ function createTray() {
         ]);
         appTray.popUpContextMenu(menu);
     });
-
-    updateTrayMenu();
 }
 
 // Строит список пунктов меню из избранного
@@ -163,17 +170,11 @@ function buildFavoriteMenuItems() {
     });
 }
 
-// Обновляет contextMenu трея
+// Обновляет contextMenu трея (только для не-macOS платформ)
 function updateTrayMenu() {
     if (!appTray) return;
-    const items = buildFavoriteMenuItems();
-    const favoritesMenu = Menu.buildFromTemplate(
-        items.length > 0 ? items : [{ label: 'Нет избранного', enabled: false }]
-    );
-    if (process.platform === 'darwin') {
-        // На macOS используем setContextMenu для нативного показа по левому клику
-        appTray.setContextMenu(favoritesMenu);
-    } else {
+    if (process.platform !== 'darwin') {
+        const items = buildFavoriteMenuItems();
         const contextMenu = Menu.buildFromTemplate([
             { label: 'Открыть', click: () => { if (mainWindow && !mainWindow.isDestroyed()) { mainWindow.show(); mainWindow.focus(); } else { createWindow(); } } },
             ...(items.length > 0 ? [{ type: 'separator' }, ...items] : []),

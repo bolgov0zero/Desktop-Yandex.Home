@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { YandexDevice, FavoriteProperty, FavoritePropertyKey } from '../types';
 import { getIconForDevice, localizeUnit } from '../constants';
 import { Loader2, Power, Star, Settings, X } from 'lucide-react';
@@ -32,7 +33,9 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [showFavMenu, setShowFavMenu] = useState(false);
+  const [favMenuPos, setFavMenuPos] = useState<{top: number; left: number} | null>(null);
   const favMenuRef = useRef<HTMLDivElement>(null);
+  const starBtnRef = useRef<HTMLDivElement>(null);
 
   // Close fav menu on outside click
   useEffect(() => {
@@ -306,11 +309,15 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({
       )}
 
       {/* Favorite star */}
-      <div className="relative" ref={!compact ? favMenuRef : undefined}>
+      <div ref={starBtnRef}>
         <div
             onClick={(e) => {
                 e.stopPropagation();
                 if (showFavMenuOption) {
+                  if (!showFavMenu) {
+                    const rect = starBtnRef.current?.getBoundingClientRect();
+                    if (rect) setFavMenuPos({ top: rect.bottom + 4, left: rect.right - 160 });
+                  }
                   setShowFavMenu(prev => !prev);
                 } else {
                   onToggleFavorite(device.id);
@@ -324,34 +331,6 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({
         >
             <Star className="w-4 h-4 fill-current" />
         </div>
-        {showFavMenu && !compact && (
-          <div className="absolute right-0 top-7 z-50 bg-white dark:bg-surface border border-gray-200 dark:border-white/10 rounded-xl shadow-xl p-1 min-w-[160px]">
-            <div className="flex items-center justify-between px-2 py-1 mb-1">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Добавить в избранное</span>
-              <button onClick={(e) => { e.stopPropagation(); setShowFavMenu(false); }} className="text-slate-400 hover:text-slate-700 dark:hover:text-white">
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); onToggleFavorite(device.id); setShowFavMenu(false); }}
-              className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
-            >
-              Целиком
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onTogglePropertyFavorite!(device.id, 'temperature'); setShowFavMenu(false); }}
-              className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
-            >
-              Температура
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onTogglePropertyFavorite!(device.id, 'humidity'); setShowFavMenu(false); }}
-              className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
-            >
-              Влажность
-            </button>
-          </div>
-        )}
       </div>
     </div>
 
@@ -424,5 +403,24 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({
         )}
       </div>
     </button>
+    {showFavMenu && favMenuPos && createPortal(
+      <div
+        ref={favMenuRef}
+        className="fixed z-[200] bg-white dark:bg-surface border border-gray-200 dark:border-white/10 rounded-xl shadow-xl p-1 min-w-[160px]"
+        style={{ top: favMenuPos.top, left: favMenuPos.left }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-2 py-1 mb-1">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Добавить в избранное</span>
+          <button onClick={() => setShowFavMenu(false)} className="text-slate-400 hover:text-slate-700 dark:hover:text-white">
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+        <button onClick={() => { onToggleFavorite(device.id); setShowFavMenu(false); }} className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200">Целиком</button>
+        <button onClick={() => { onTogglePropertyFavorite!(device.id, 'temperature'); setShowFavMenu(false); }} className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200">Температура</button>
+        <button onClick={() => { onTogglePropertyFavorite!(device.id, 'humidity'); setShowFavMenu(false); }} className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200">Влажность</button>
+      </div>,
+      document.body
+    )}
   );
 };
