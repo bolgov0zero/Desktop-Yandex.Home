@@ -40,10 +40,9 @@ let pinnedSensorId = null; // ID датчика, закреплённого в �
 
 // --- 1. Обработка закрытия окна (свернуть в трей) ---
 const minimizeToTray = (event) => {
-	// Если пользователь нажимает крестик, сворачиваем в трей (на macOS окно может скрыться/закрыться само)
-	if (appTray && mainWindow && !mainWindow.isDestroyed() && process.platform !== 'darwin') {
-		event.preventDefault(); // Предотвращаем закрытие
-		mainWindow.hide();      // Скрываем окно
+	if (appTray && mainWindow && !mainWindow.isDestroyed()) {
+		event.preventDefault();
+		mainWindow.hide();
 	}
 };
 
