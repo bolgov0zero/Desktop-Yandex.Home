@@ -68,110 +68,99 @@ function createTray() {
     }
     
     appTray.setToolTip('Управление Умным Домом Яндекс');
-    
-    // На macOS используем событие 'click', на других платформах может быть 'click' или 'right-click'
+
+    // Левый клик — меню избранного (без открытия окна)
     appTray.on('click', () => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-            if (mainWindow.isVisible()) {
-                mainWindow.hide();
-            } else {
-                mainWindow.show();
-                mainWindow.focus();
-            }
-        } else {
-            createWindow();
-        }
+        showFavoritesMenu();
     });
 
-    // Обновляем контекстное меню сразу после создания
+    // Правый клик — Открыть / Закрыть
+    appTray.on('right-click', () => {
+        const menu = Menu.buildFromTemplate([
+            {
+                label: 'Открыть',
+                click: () => {
+                    if (mainWindow && !mainWindow.isDestroyed()) {
+                        mainWindow.show();
+                        mainWindow.focus();
+                    } else {
+                        createWindow();
+                    }
+                }
+            },
+            {
+                label: 'Закрыть',
+                click: () => {
+                    if (mainWindow) mainWindow.removeListener('close', minimizeToTray);
+                    app.quit();
+                }
+            },
+        ]);
+        appTray.popUpContextMenu(menu);
+    });
+
     updateTrayMenu();
 }
 
-// Функция для создания контекстного меню Tray
-function updateTrayMenu() {
-    if (!appTray) return;
-
-    // --- Динамическая секция избранных элементов ---
-    const favoriteMenuItems = favoritesData.map(item => {
+// Строит список пунктов меню из избранного
+function buildFavoriteMenuItems() {
+    return favoritesData.map(item => {
         const isDevice = item.type === 'device';
         const isToggleableDevice = isDevice && item.isToggleable;
-        
-        // Для устройств отображаем статус или значение сенсора
-        let deviceStatus = '';
+
+        let label = item.name;
         if (isDevice) {
-            // Если есть sensorValue (для сенсоров и счётчиков), показываем его вместо цветового индикатора
             if (item.sensorValue) {
-                deviceStatus = ` ${item.sensorValue}`;
+                label += `  ${item.sensorValue}`;
             } else if (isToggleableDevice) {
-                // Для переключаемых устройств показываем цветовой индикатор
-                deviceStatus = item.isOn
-                    ? ' 🟢' // Зеленый кружок для "Вкл" (включено)
-                    : ' 🔴'; // Красный кружок для "Выкл" (выключено)
+                label += item.isOn ? '  🟢' : '  🔴';
             }
         }
-        const label = `${item.name}${deviceStatus}`;
-        
-        // Определяем действие при клике
-        let clickAction = null;
 
+        let clickAction = null;
         if (isToggleableDevice) {
-            // Отправляем команду TOGGLE_DEVICE в React-приложение
             clickAction = () => {
                 if (mainWindow && !mainWindow.isDestroyed()) {
                     mainWindow.webContents.send('tray:execute-command', 'TOGGLE_DEVICE', item.id, item.isOn);
                 }
             };
         } else if (item.type === 'scenario') {
-            // Отправляем команду EXECUTE_SCENARIO в React-приложение
-             clickAction = () => {
+            clickAction = () => {
                 if (mainWindow && !mainWindow.isDestroyed()) {
                     mainWindow.webContents.send('tray:execute-command', 'EXECUTE_SCENARIO', item.id);
                 }
             };
         }
-        
-        return {
-            label: label,
-            type: 'normal',
-            enabled: !!clickAction, // Отключаем, если нет действия
-            click: clickAction,
-        };
+
+        return { label, type: 'normal', enabled: !!clickAction, click: clickAction };
     });
+}
 
-    // --- Основное меню ---
-    const contextMenu = Menu.buildFromTemplate([
-        { 
-            label: 'Открыть приложение', 
-            click: () => {
-                if (mainWindow && !mainWindow.isDestroyed()) {
-                    mainWindow.show();
-                    mainWindow.focus();
-                } else {
-                    createWindow();
-                }
-            }
-        },
-        // Разделитель перед динамической секцией, если она не пуста
-        ...(favoriteMenuItems.length > 0 ? [{ type: 'separator' }] : []), 
-        
-        // Динамическая секция
-        ...favoriteMenuItems,
-        
-        // Разделитель перед "Выход"
-        { type: 'separator' },
-        { 
-            label: 'Выход', 
-            click: () => {
-                // Удаляем слушатель 'close', чтобы гарантированно закрыть приложение
-                if (mainWindow) {
-                    mainWindow.removeListener('close', minimizeToTray);
-                }
-                app.quit();
-            }
-        },
-    ]);
+// Показывает меню избранного по левому клику
+function showFavoritesMenu() {
+    if (!appTray) return;
+    const items = buildFavoriteMenuItems();
+    const template = items.length > 0
+        ? items
+        : [{ label: 'Нет избранного', enabled: false }];
+    appTray.popUpContextMenu(Menu.buildFromTemplate(template));
+}
 
-    appTray.setContextMenu(contextMenu);
+// Обновляет внутренний contextMenu (нужен для платформ без popUpContextMenu)
+function updateTrayMenu() {
+    if (!appTray) return;
+    // На macOS меню показывается через popUpContextMenu, setContextMenu не используется
+    // Для других платформ оставляем полное меню через setContextMenu
+    if (process.platform !== 'darwin') {
+        const items = buildFavoriteMenuItems();
+        const contextMenu = Menu.buildFromTemplate([
+            { label: 'Открыть', click: () => { if (mainWindow && !mainWindow.isDestroyed()) { mainWindow.show(); mainWindow.focus(); } else { createWindow(); } } },
+            ...(items.length > 0 ? [{ type: 'separator' }, ...items] : []),
+            { type: 'separator' },
+            { label: 'Выход', click: () => { if (mainWindow) mainWindow.removeListener('close', minimizeToTray); app.quit(); } },
+        ]);
+        appTray.setContextMenu(contextMenu);
+    }
 }
 
 
