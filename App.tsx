@@ -537,8 +537,17 @@ const getTrayMenuItems = useCallback((
             const onOffCapability = device.capabilities.find(c => c.type === 'devices.capabilities.on_off');
             const isToggleable = !!onOffCapability;
             let sensorValue: string | null = null;
+            let titleValue: string | null = null;
             if (!isToggleable) {
                 sensorValue = formatSensorValueForTray(device);
+                // titleValue: temp / humidity через " / "
+                const props = device.properties ?? [];
+                const tempProp = props.find((p: any) => (p.parameters?.instance ?? p.state?.instance) === 'temperature') as any;
+                const humProp = props.find((p: any) => (p.parameters?.instance ?? p.state?.instance) === 'humidity') as any;
+                const parts: string[] = [];
+                if (tempProp?.state?.value !== undefined) parts.push(`${tempProp.state.value}°C`);
+                if (humProp?.state?.value !== undefined) parts.push(`${humProp.state.value}%`);
+                titleValue = parts.length > 0 ? parts.join(' / ') : sensorValue;
             }
             return {
                 id: device.id,
@@ -547,6 +556,7 @@ const getTrayMenuItems = useCallback((
                 isToggleable,
                 isOn: onOffCapability?.state?.value === true,
                 sensorValue,
+                titleValue,
                 roomName: getRoomForDevice(device.id)?.name,
             };
         });
@@ -572,6 +582,7 @@ const getTrayMenuItems = useCallback((
                 type: 'device' as TrayItemType,
                 isToggleable: false,
                 sensorValue,
+                titleValue: sensorValue,
                 roomName: getRoomForDevice(fp.deviceId)?.name,
             };
         })

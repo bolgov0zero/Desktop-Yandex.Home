@@ -36,6 +36,7 @@ const ACCOUNT_NAME = 'YandexToken';
 let mainWindow = null;
 let appTray = null; // Переменная для хранения экземпляра Tray
 let favoritesData = []; // Данные избранных устройств/сценариев
+let pinnedSensorId = null; // ID датчика, закреплённого в строке меню
 
 // --- 1. Обработка закрытия окна (свернуть в трей) ---
 const minimizeToTray = (event) => {
@@ -165,13 +166,25 @@ function buildFavoriteMenuItems() {
             };
         }
 
-        // Sensor — значение в sublabel рядом с комнатой
+        // Sensor — кликабельный, выбирается для показа в строке меню
+        const isPinned = pinnedSensorId === item.id;
         const sublabelWithValue = [item.roomName, item.sensorValue].filter(Boolean).join('   ');
         return {
-            label: item.name,
+            label: isPinned ? `✓ ${item.name}` : item.name,
             sublabel: sublabelWithValue || undefined,
             type: 'normal',
-            enabled: false,
+            click: () => {
+                if (isPinned) {
+                    // Снимаем выбор
+                    pinnedSensorId = null;
+                    if (appTray) appTray.setTitle('');
+                } else {
+                    // Выбираем этот датчик
+                    pinnedSensorId = item.id;
+                    if (appTray) appTray.setTitle(item.titleValue || item.sensorValue || '');
+                }
+                updateTrayMenu();
+            },
         };
     });
 }
@@ -360,7 +373,18 @@ if (!gotTheLock) {
         // --- 2. НОВЫЙ IPC-ОБРАБОТЧИК ДЛЯ ПОЛУЧЕНИЯ ИЗБРАННЫХ ЭЛЕМЕНТОВ ---
         ipcMain.on('tray:update-favorites', (event, favorites) => {
             favoritesData = favorites;
-            updateTrayMenu(); // Обновляем меню при получении новых данных
+            // Обновляем title если закреплённый датчик есть в новых данных
+            if (pinnedSensorId && appTray) {
+                const pinned = favoritesData.find(item => item.id === pinnedSensorId);
+                if (pinned && (pinned.titleValue || pinned.sensorValue)) {
+                    appTray.setTitle(pinned.titleValue || pinned.sensorValue || '');
+                } else if (!pinned) {
+                    // Датчик пропал из избранного — сбрасываем
+                    pinnedSensorId = null;
+                    appTray.setTitle('');
+                }
+            }
+            updateTrayMenu();
         });
 
         // History handlers

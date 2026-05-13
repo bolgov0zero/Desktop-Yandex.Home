@@ -120,6 +120,7 @@ export interface TrayMenuItem {
     isOn?: boolean;
     // Для сенсоров и счётчиков - отформатированное значение (например, "24.5 °C", "закрыто", "3758.142 м³")
     sensorValue?: string | null;
+    titleValue?: string | null; // Значение для строки меню (формат "21.5°C / 60%")
     roomName?: string;
 }
 
