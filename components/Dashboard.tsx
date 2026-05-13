@@ -10,7 +10,7 @@ import { GroupThermostatSettingsModal } from './GroupThermostatSettingsModal';
 import { FanSettingsModal } from './FanSettingsModal';
 import { GroupFanSettingsModal } from './GroupFanSettingsModal';
 import { InfoModal } from './InfoModal';
-import { LogOut, Home, Layers, MonitorSmartphone, RefreshCw, X, Star, Sun, Moon, ChevronRight, ChevronDown, ChevronUp, Power, Info, Building2, Zap } from 'lucide-react';
+import { LogOut, Home, Layers, MonitorSmartphone, RefreshCw, X, Star, Sun, Moon, ChevronRight, ChevronDown, ChevronUp, Power, Info, Building2, Zap, LayoutGrid } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { isLightDevice, isLightGroup } from '../constants';
 import packageJson from '../package.json';
@@ -58,6 +58,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showAllDevicesModal, setShowAllDevicesModal] = useState(false);
   const [selectedThermostatDevice, setSelectedThermostatDevice] = useState<YandexDevice | null>(null);
   const [selectedLightDevice, setSelectedLightDevice] = useState<YandexDevice | null>(null);
   const [selectedFanDevice, setSelectedFanDevice] = useState<YandexDevice | null>(null);
@@ -580,13 +581,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
              <button
                 onClick={onToggleAutostart}
                 className={`p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors ${
-                  isAutostartEnabled 
-                    ? 'text-purple-600 dark:text-primary bg-purple-50 dark:bg-primary/20' 
+                  isAutostartEnabled
+                    ? 'text-purple-600 dark:text-primary bg-purple-50 dark:bg-primary/20'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
                 title={isAutostartEnabled ? 'Автозапуск включен. Нажмите, чтобы выключить' : 'Автозапуск выключен. Нажмите, чтобы включить'}
             >
                 <Power className={`w-5 h-5`} />
+            </button>
+            <button
+                onClick={() => setShowAllDevicesModal(true)}
+                className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                title="Все устройства и сценарии"
+            >
+                <LayoutGrid className="w-5 h-5" />
             </button>
              <button
                 onClick={toggleTheme}
@@ -620,353 +628,235 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-12">
-
-		{hasFavorites && ( // ВОССТАНОВИТЬ СЕКЦИЮ ИЗБРАННОГО
-			<section className="mb-8">
-				<div className="flex items-center gap-3 mb-4">
-					<Star className="w-6 h-6 text-yellow-500 dark:text-accent" />
-					<h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Избранное</h2>
-				</div>
-
-				{/* Избранные сценарии */}
-				{favoriteScenarios.length > 0 && (
-					<>
-						<h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mt-6 mb-3">Сценарии ({favoriteScenarios.length})</h3>
-						<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-							{favoriteScenarios.map(scenario => (
-								<ScenarioCard 
-									key={scenario.id} 
-									scenario={scenario} 
-									onExecute={onExecuteScenario} 
-									isFavorite={true} 
-									onToggleFavorite={onToggleScenarioFavorite}
-								/>
-							))}
-						</div>
-					</>
-				)}
-
-				{/* Избранные устройства */}
-				{favoriteDevices.length > 0 && (
-					<>
-						<h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mt-6 mb-3">Устройства ({favoriteDevices.length})</h3>
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-							{favoriteDevices.map(device => (
-								<DeviceCard
-									key={device.id}
-									device={device}
-									onToggle={onToggleDevice}
-									isFavorite={true}
-									onToggleFavorite={onToggleDeviceFavorite}
-									compact={true}
-									roomName={getRoomName(device.id)}
-									onOpenSettings={(dev) => {
-										if (isLightDevice(dev.type)) {
-											handleOpenLightSettings(dev);
-										} else if (dev.type === 'devices.types.ventilation.fan') {
-											handleOpenFanSettings(dev);
-										} else {
-											handleOpenThermostatSettings(dev);
-										}
-									}}
-								/>
-							))}
-						</div>
-					</>
-				)}
-			</section>
-		)}
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-4">
-                <div className="p-3 bg-orange-50 dark:bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400"><Building2 className="w-6 h-6"/></div>
-                <div>
-                    <p className="text-sm text-slate-600 dark:text-secondary">Домов</p>
-                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{households.length}</p>
-                </div>
-            </div>
-            <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-4">
-                <div className="p-3 bg-blue-50 dark:bg-blue-500/10 rounded-lg text-blue-600 dark:text-blue-400"><Layers className="w-6 h-6"/></div>
-                <div>
-                    <p className="text-sm text-slate-600 dark:text-secondary">Комнат</p>
-                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{roomsForHome.length}</p>
-                </div>
-            </div>
-            <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-4">
-                <div className="p-3 bg-purple-50 dark:bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400"><Zap className="w-6 h-6"/></div>
-                <div>
-                    <p className="text-sm text-slate-600 dark:text-secondary">Сценариев</p>
-                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{activeScenarios.length}</p>
-                </div>
-            </div>
-            <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-4">
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400"><MonitorSmartphone className="w-6 h-6"/></div>
-                <div>
-                    <p className="text-sm text-slate-600 dark:text-secondary">Устройств</p>
-                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{devicesForHome.length}</p>
-                </div>
-            </div>
-        </div>
-
-        {/* Scenarios Section */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <button
-              onClick={toggleScenarios}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-            >
-              {isScenariosCollapsed ? (
-                <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              )}
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Сценарии</h2>
-            </button>
-            <span className="text-sm text-slate-600 dark:text-secondary bg-white dark:bg-surface px-3 py-1 rounded-full border border-gray-200 dark:border-white/5">
-              {activeScenarios.length} активных
-            </span>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">
+        {hasFavorites ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {favoriteScenarios.map(scenario => (
+              <ScenarioCard
+                key={scenario.id}
+                scenario={scenario}
+                onExecute={onExecuteScenario}
+                isFavorite={true}
+                onToggleFavorite={onToggleScenarioFavorite}
+              />
+            ))}
+            {favoriteDevices.map(device => (
+              <DeviceCard
+                key={device.id}
+                device={device}
+                onToggle={onToggleDevice}
+                isFavorite={true}
+                onToggleFavorite={onToggleDeviceFavorite}
+                compact={true}
+                roomName={getRoomName(device.id)}
+                onOpenSettings={(dev) => {
+                  if (isLightDevice(dev.type)) {
+                    handleOpenLightSettings(dev);
+                  } else if (dev.type === 'devices.types.ventilation.fan') {
+                    handleOpenFanSettings(dev);
+                  } else {
+                    handleOpenThermostatSettings(dev);
+                  }
+                }}
+              />
+            ))}
           </div>
-
-          {!isScenariosCollapsed && (
-            <>
-              {activeScenarios.length === 0 ? (
-                 <div className="text-center py-20 border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-2xl bg-gray-50 dark:bg-surface/30">
-                    <p className="text-slate-600 dark:text-slate-400">У вас нет активных сценариев.</p>
-                 </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {activeScenarios.map((scenario: YandexScenario) => (
-                    <ScenarioCard 
-                      key={scenario.id} 
-                      scenario={scenario} 
-                      onExecute={onExecuteScenario} 
-                      isFavorite={favoriteScenarioIds.includes(scenario.id)}
-                      onToggleFavorite={onToggleScenarioFavorite}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </section>
-
-        {/* Groups Section */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <button
-              onClick={toggleGroups}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-            >
-              {isGroupsCollapsed ? (
-                <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              )}
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Группы</h2>
-            </button>
-            <span className="text-sm text-slate-600 dark:text-secondary bg-white dark:bg-surface px-3 py-1 rounded-full border border-gray-200 dark:border-white/5">
-              {groupsForHome.length} групп
-            </span>
+        ) : (
+          <div className="text-center py-20 text-slate-500 dark:text-slate-400">
+            <Star className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p>Нет избранного. Добавьте устройства или сценарии через кнопку сетки в панели.</p>
           </div>
-
-          {!isGroupsCollapsed && (
-            <>
-              {groupsForHome.length === 0 ? (
-                 <div className="text-center py-20 border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-2xl bg-gray-50 dark:bg-surface/30">
-                    <p className="text-slate-600 dark:text-slate-400">У вас нет групп устройств.</p>
-                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {groupsForHome.map(group => (
-                    <GroupCard
-                      key={group.id}
-                      group={group}
-                      devices={devicesForHome}
-                      onToggleGroup={onToggleGroup}
-                      onToggleDevice={onToggleDevice}
-                      favoriteDeviceIds={favoriteDeviceIds}
-                      onToggleDeviceFavorite={onToggleDeviceFavorite}
-                      onOpenSettings={(device) => {
-                        if (isLightDevice(device.type)) {
-                          handleOpenLightSettings(device);
-                        } else if (device.type === 'devices.types.ventilation.fan') {
-                          handleOpenFanSettings(device);
-                        } else {
-                          handleOpenThermostatSettings(device);
-                        }
-                      }}
-                      onOpenGroupSettings={(group) => {
-                        // Check if group contains light, thermostat, or fan devices
-                        const groupDevices = devicesForHome.filter(d => group.devices.includes(d.id));
-                        const isLightGroupCheck = isLightGroup(groupDevices);
-                        const isThermostatGroup = groupDevices.length > 0 && groupDevices.every(d => 
-                          d.type === 'devices.types.thermostat.ac' || d.type === 'devices.types.thermostat'
-                        );
-                        const isFanGroup = groupDevices.length > 0 && groupDevices.every(d => d.type === 'devices.types.ventilation.fan');
-                        
-                        if (isLightGroupCheck) {
-                          handleOpenGroupLightSettings(group);
-                        } else if (isThermostatGroup) {
-                          handleOpenGroupThermostatSettings(group);
-                        } else if (isFanGroup) {
-                          handleOpenGroupFanSettings(group);
-                        }
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </section>
-
-        {/* Devices Section */}
-        <section>
-            <div className="flex items-center justify-between mb-6">
-              <button
-                onClick={toggleDevices}
-                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-              >
-                {isDevicesCollapsed ? (
-                  <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                )}
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Устройства</h2>
-              </button>
-              <span className="text-sm text-slate-600 dark:text-secondary bg-white dark:bg-surface px-3 py-1 rounded-full border border-gray-200 dark:border-white/5">
-              {devicesForHome.length} устройств
-              </span>
-            </div>
-            
-            {!isDevicesCollapsed && (
-              <>
-                {roomsForHome.length === 0 && devicesForHome.length > 0 && (
-                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        {devicesForHome.map(device => (
-                            <DeviceCard 
-                            key={device.id} 
-                            device={device} 
-                            onToggle={onToggleDevice} 
-                            isFavorite={favoriteDeviceIds.includes(device.id)} 
-                            onToggleFavorite={onToggleDeviceFavorite}
-                            onOpenSettings={(dev) => {
-                              if (isLightDevice(dev.type)) {
-                                handleOpenLightSettings(dev);
-                              } else if (dev.type === 'devices.types.ventilation.fan') {
-                                handleOpenFanSettings(dev);
-                              } else {
-                                handleOpenThermostatSettings(dev);
-                              }
-                            }}
-                            />
-                        ))}
-                     </div>
-                )}
-
-                <div className="space-y-8">
-                    {roomsForHome.map(room => {
-                        const roomDevices = devicesForHome.filter(d => room.devices.includes(d.id));
-                        if (roomDevices.length === 0) return null;
-                        const isRoomCollapsed = collapsedRooms.has(room.id);
-                        
-                        return (
-                            <div key={room.id} className="bg-gray-100 dark:bg-surface/30 border border-gray-200 dark:border-white/5 rounded-2xl p-6">
-                                <button
-                                  onClick={() => toggleRoom(room.id)}
-                                  className="w-full flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity"
-                                >
-                                  {isRoomCollapsed ? (
-                                    <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                                  ) : (
-                                    <ChevronDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                                  )}
-                                  <h3 className="font-semibold text-lg text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-primary"></span>
-                                      {room.name}
-                                  </h3>
-                                </button>
-                                {!isRoomCollapsed && (
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                      {roomDevices.map(dev => (
-                                          <DeviceCard 
-                                          key={dev.id} 
-                                          device={dev} 
-                                          onToggle={onToggleDevice} 
-                                          isFavorite={favoriteDeviceIds.includes(dev.id)} 
-                                          onToggleFavorite={onToggleDeviceFavorite}
-                                          onOpenSettings={(device) => {
-                                            if (isLightDevice(device.type)) {
-                                              handleOpenLightSettings(device);
-                                            } else if (device.type === 'devices.types.ventilation.fan') {
-                                              handleOpenFanSettings(device);
-                                            } else {
-                                              handleOpenThermostatSettings(device);
-                                            }
-                                          }}
-                                          />
-                                      ))}
-                                  </div>
-                                )}
-                            </div>
-                        )
-                    })}
-                </div>
-                
-                {/* Unassigned Devices */}
-                 {(() => {
-                     const assignedIds = new Set(roomsForHome.flatMap(r => r.devices));
-                     const unassignedDevices = devicesForHome.filter(d => !assignedIds.has(d.id));
-                     if (unassignedDevices.length === 0) return null;
-
-                     return (
-                         <div className="mt-8 bg-gray-100 dark:bg-surface/30 border border-gray-200 dark:border-white/5 rounded-2xl p-6">
-                            <button
-                              onClick={toggleUnassignedDevices}
-                              className="w-full flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity"
-                            >
-                              {isUnassignedDevicesCollapsed ? (
-                                <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                              ) : (
-                                <ChevronDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                              )}
-                              <h3 className="font-semibold text-lg text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-primary"></span>
-                                  Без комнаты
-                              </h3>
-                            </button>
-                            {!isUnassignedDevicesCollapsed && (
-                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                  {unassignedDevices.map(dev => (
-                                      <DeviceCard 
-                                      key={dev.id} 
-                                      device={dev} 
-                                      onToggle={onToggleDevice} 
-                                      isFavorite={favoriteDeviceIds.includes(dev.id)} 
-                                      onToggleFavorite={onToggleDeviceFavorite}
-                                      onOpenSettings={(device) => {
-                                        if (isLightDevice(device.type)) {
-                                          handleOpenLightSettings(device);
-                                        } else if (device.type === 'devices.types.ventilation.fan') {
-                                          handleOpenFanSettings(device);
-                                        } else {
-                                          handleOpenThermostatSettings(device);
-                                        }
-                                      }}
-                                      />
-                                  ))}
-                              </div>
-                            )}
-                         </div>
-                     );
-                 })()}
-              </>
-            )}
-        </section>
-
+        )}
       </main>
+
+      {/* All Devices & Scenarios Modal */}
+      {showAllDevicesModal && (
+        <div className="fixed inset-0 z-[90] bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-stretch justify-end">
+          <div className="bg-gray-50 dark:bg-background w-full max-w-3xl flex flex-col shadow-2xl overflow-hidden">
+            {/* Modal header */}
+            <div className="sticky top-0 z-10 bg-white/80 dark:bg-surface/80 backdrop-blur-md border-b border-gray-200 dark:border-white/5 px-6 py-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <LayoutGrid className="w-5 h-5 text-purple-600 dark:text-primary" />
+                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Все устройства и сценарии</h2>
+              </div>
+              <button
+                onClick={() => setShowAllDevicesModal(false)}
+                className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-600 dark:text-slate-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-10">
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-3">
+                  <div className="p-2 bg-orange-50 dark:bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400"><Building2 className="w-5 h-5"/></div>
+                  <div><p className="text-xs text-slate-600 dark:text-secondary">Домов</p><p className="text-lg font-bold text-slate-900 dark:text-slate-100">{households.length}</p></div>
+                </div>
+                <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-3">
+                  <div className="p-2 bg-blue-50 dark:bg-blue-500/10 rounded-lg text-blue-600 dark:text-blue-400"><Layers className="w-5 h-5"/></div>
+                  <div><p className="text-xs text-slate-600 dark:text-secondary">Комнат</p><p className="text-lg font-bold text-slate-900 dark:text-slate-100">{roomsForHome.length}</p></div>
+                </div>
+                <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-3">
+                  <div className="p-2 bg-purple-50 dark:bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400"><Zap className="w-5 h-5"/></div>
+                  <div><p className="text-xs text-slate-600 dark:text-secondary">Сценариев</p><p className="text-lg font-bold text-slate-900 dark:text-slate-100">{activeScenarios.length}</p></div>
+                </div>
+                <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-3">
+                  <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400"><MonitorSmartphone className="w-5 h-5"/></div>
+                  <div><p className="text-xs text-slate-600 dark:text-secondary">Устройств</p><p className="text-lg font-bold text-slate-900 dark:text-slate-100">{devicesForHome.length}</p></div>
+                </div>
+              </div>
+
+              {/* Scenarios */}
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <button onClick={toggleScenarios} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    {isScenariosCollapsed ? <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-600 dark:text-slate-400" />}
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Сценарии</h3>
+                  </button>
+                  <span className="text-sm text-slate-600 dark:text-secondary bg-white dark:bg-surface px-3 py-1 rounded-full border border-gray-200 dark:border-white/5">{activeScenarios.length} активных</span>
+                </div>
+                {!isScenariosCollapsed && (
+                  activeScenarios.length === 0
+                    ? <div className="text-center py-10 border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-2xl"><p className="text-slate-500 dark:text-slate-400">Нет активных сценариев</p></div>
+                    : <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {activeScenarios.map((scenario: YandexScenario) => (
+                          <ScenarioCard key={scenario.id} scenario={scenario} onExecute={onExecuteScenario} isFavorite={favoriteScenarioIds.includes(scenario.id)} onToggleFavorite={onToggleScenarioFavorite} />
+                        ))}
+                      </div>
+                )}
+              </section>
+
+              {/* Groups */}
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <button onClick={toggleGroups} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    {isGroupsCollapsed ? <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-600 dark:text-slate-400" />}
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Группы</h3>
+                  </button>
+                  <span className="text-sm text-slate-600 dark:text-secondary bg-white dark:bg-surface px-3 py-1 rounded-full border border-gray-200 dark:border-white/5">{groupsForHome.length} групп</span>
+                </div>
+                {!isGroupsCollapsed && (
+                  groupsForHome.length === 0
+                    ? <div className="text-center py-10 border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-2xl"><p className="text-slate-500 dark:text-slate-400">Нет групп</p></div>
+                    : <div className="space-y-4">
+                        {groupsForHome.map(group => (
+                          <GroupCard
+                            key={group.id}
+                            group={group}
+                            devices={devicesForHome}
+                            onToggleGroup={onToggleGroup}
+                            onToggleDevice={onToggleDevice}
+                            favoriteDeviceIds={favoriteDeviceIds}
+                            onToggleDeviceFavorite={onToggleDeviceFavorite}
+                            onOpenSettings={(device) => {
+                              if (isLightDevice(device.type)) handleOpenLightSettings(device);
+                              else if (device.type === 'devices.types.ventilation.fan') handleOpenFanSettings(device);
+                              else handleOpenThermostatSettings(device);
+                            }}
+                            onOpenGroupSettings={(group) => {
+                              const groupDevices = devicesForHome.filter(d => group.devices.includes(d.id));
+                              const isLightGroupCheck = isLightGroup(groupDevices);
+                              const isThermostatGroup = groupDevices.length > 0 && groupDevices.every(d => d.type === 'devices.types.thermostat.ac' || d.type === 'devices.types.thermostat');
+                              const isFanGroup = groupDevices.length > 0 && groupDevices.every(d => d.type === 'devices.types.ventilation.fan');
+                              if (isLightGroupCheck) handleOpenGroupLightSettings(group);
+                              else if (isThermostatGroup) handleOpenGroupThermostatSettings(group);
+                              else if (isFanGroup) handleOpenGroupFanSettings(group);
+                            }}
+                          />
+                        ))}
+                      </div>
+                )}
+              </section>
+
+              {/* Devices */}
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <button onClick={toggleDevices} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    {isDevicesCollapsed ? <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-600 dark:text-slate-400" />}
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Устройства</h3>
+                  </button>
+                  <span className="text-sm text-slate-600 dark:text-secondary bg-white dark:bg-surface px-3 py-1 rounded-full border border-gray-200 dark:border-white/5">{devicesForHome.length} устройств</span>
+                </div>
+                {!isDevicesCollapsed && (
+                  <div className="space-y-6">
+                    {roomsForHome.length === 0 && devicesForHome.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {devicesForHome.map(device => (
+                          <DeviceCard key={device.id} device={device} onToggle={onToggleDevice} isFavorite={favoriteDeviceIds.includes(device.id)} onToggleFavorite={onToggleDeviceFavorite}
+                            onOpenSettings={(dev) => {
+                              if (isLightDevice(dev.type)) handleOpenLightSettings(dev);
+                              else if (dev.type === 'devices.types.ventilation.fan') handleOpenFanSettings(dev);
+                              else handleOpenThermostatSettings(dev);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    {roomsForHome.map(room => {
+                      const roomDevices = devicesForHome.filter(d => room.devices.includes(d.id));
+                      if (roomDevices.length === 0) return null;
+                      const isRoomCollapsed = collapsedRooms.has(room.id);
+                      return (
+                        <div key={room.id} className="bg-gray-100 dark:bg-surface/30 border border-gray-200 dark:border-white/5 rounded-2xl p-5">
+                          <button onClick={() => toggleRoom(room.id)} className="w-full flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity">
+                            {isRoomCollapsed ? <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />}
+                            <h4 className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-primary"></span>{room.name}
+                            </h4>
+                          </button>
+                          {!isRoomCollapsed && (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                              {roomDevices.map(dev => (
+                                <DeviceCard key={dev.id} device={dev} onToggle={onToggleDevice} isFavorite={favoriteDeviceIds.includes(dev.id)} onToggleFavorite={onToggleDeviceFavorite}
+                                  onOpenSettings={(device) => {
+                                    if (isLightDevice(device.type)) handleOpenLightSettings(device);
+                                    else if (device.type === 'devices.types.ventilation.fan') handleOpenFanSettings(device);
+                                    else handleOpenThermostatSettings(device);
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {(() => {
+                      const assignedIds = new Set(roomsForHome.flatMap(r => r.devices));
+                      const unassignedDevices = devicesForHome.filter(d => !assignedIds.has(d.id));
+                      if (unassignedDevices.length === 0) return null;
+                      return (
+                        <div className="bg-gray-100 dark:bg-surface/30 border border-gray-200 dark:border-white/5 rounded-2xl p-5">
+                          <button onClick={toggleUnassignedDevices} className="w-full flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity">
+                            {isUnassignedDevicesCollapsed ? <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />}
+                            <h4 className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-primary"></span>Без комнаты
+                            </h4>
+                          </button>
+                          {!isUnassignedDevicesCollapsed && (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                              {unassignedDevices.map(dev => (
+                                <DeviceCard key={dev.id} device={dev} onToggle={onToggleDevice} isFavorite={favoriteDeviceIds.includes(dev.id)} onToggleFavorite={onToggleDeviceFavorite}
+                                  onOpenSettings={(device) => {
+                                    if (isLightDevice(device.type)) handleOpenLightSettings(device);
+                                    else if (device.type === 'devices.types.ventilation.fan') handleOpenFanSettings(device);
+                                    else handleOpenThermostatSettings(device);
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
 	  
       {showConfirmModal && (
           <div className="fixed inset-0 z-[100] bg-black/50 dark:bg-black/70 flex items-center justify-center backdrop-blur-sm">
