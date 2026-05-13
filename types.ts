@@ -116,8 +116,15 @@ export interface TrayMenuItem {
     name: string;
     type: TrayItemType;
     // Для устройств
-    isToggleable?: boolean; 
+    isToggleable?: boolean;
     isOn?: boolean;
     // Для сенсоров и счётчиков - отформатированное значение (например, "24.5 °C", "закрыто", "3758.142 м³")
     sensorValue?: string | null;
+    roomName?: string;
+}
+
+export type FavoritePropertyKey = 'all' | 'temperature' | 'humidity';
+export interface FavoriteProperty {
+  deviceId: string;
+  property: FavoritePropertyKey;
 }

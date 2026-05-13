@@ -44,5 +44,9 @@ contextBridge.exposeInMainWorld('api', {
         });
         // Возвращаем функцию для отписки
         return () => ipcRenderer.removeAllListeners('yandex-api:retry-attempt');
-    }
+    },
+
+    // History data
+    getSensorHistory: () => ipcRenderer.invoke('history:getData'),
+    recordSensorData: (data) => ipcRenderer.send('history:record', data),
 });

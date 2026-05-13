@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import { YandexUserInfoResponse, YandexScenario, YandexHousehold, YandexDevice, YandexGroup } from '../types';
+import { YandexUserInfoResponse, YandexScenario, YandexHousehold, YandexDevice, YandexGroup, FavoriteProperty, FavoritePropertyKey } from '../types';
 import { ScenarioCard } from './ScenarioCard';
 import { DeviceCard } from './DeviceCard';
 import { GroupCard } from './GroupCard';
@@ -10,6 +10,7 @@ import { GroupThermostatSettingsModal } from './GroupThermostatSettingsModal';
 import { FanSettingsModal } from './FanSettingsModal';
 import { GroupFanSettingsModal } from './GroupFanSettingsModal';
 import { InfoModal } from './InfoModal';
+import { SensorHistoryModal } from './SensorHistoryModal';
 import { LogOut, Home, Layers, MonitorSmartphone, RefreshCw, X, Star, Sun, Moon, ChevronRight, ChevronDown, ChevronUp, Power, Info, Building2, Zap, LayoutGrid } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { isLightDevice, isLightGroup } from '../constants';
@@ -35,6 +36,8 @@ interface DashboardProps {
   onToggleScenarioFavorite: (id: string) => void;
   isAutostartEnabled: boolean;
   onToggleAutostart: () => void;
+  favoriteProperties: FavoriteProperty[];
+  onTogglePropertyFavorite: (deviceId: string, property: FavoritePropertyKey) => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -55,10 +58,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onToggleScenarioFavorite,
   isAutostartEnabled,
   onToggleAutostart,
+  favoriteProperties,
+  onTogglePropertyFavorite,
 }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showAllDevicesModal, setShowAllDevicesModal] = useState(false);
+  const [historyDevice, setHistoryDevice] = useState<YandexDevice | null>(null);
   const [selectedThermostatDevice, setSelectedThermostatDevice] = useState<YandexDevice | null>(null);
   const [selectedLightDevice, setSelectedLightDevice] = useState<YandexDevice | null>(null);
   const [selectedFanDevice, setSelectedFanDevice] = useState<YandexDevice | null>(null);
@@ -314,7 +320,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const favoriteSensors = favoriteDevices.filter(isSensorDevice);
   const favoriteOtherDevices = favoriteDevices.filter(d => !isSensorDevice(d));
 
-  const hasFavorites = favoriteScenarios.length > 0 || favoriteDevices.length > 0;
+  const hasFavorites = favoriteScenarios.length > 0 || favoriteDevices.length > 0 || favoriteProperties.length > 0;
 
   const getRoomName = (deviceId: string): string | undefined => {
     const room = roomsForHome.find(r => r.devices.includes(deviceId));
@@ -670,6 +676,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       onToggleFavorite={onToggleDeviceFavorite}
                       compact={true}
                       roomName={getRoomName(device.id)}
+                      favoriteProperties={favoriteProperties}
+                      onTogglePropertyFavorite={onTogglePropertyFavorite}
+                      onOpenHistory={(dev) => setHistoryDevice(dev)}
                       onOpenSettings={(dev) => {
                         if (isLightDevice(dev.type)) handleOpenLightSettings(dev);
                         else if (dev.type === 'devices.types.ventilation.fan') handleOpenFanSettings(dev);
@@ -1003,6 +1012,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
           onApply={handleApplyGroupFanSettings}
         />
       )}
+
+      {/* Sensor History Modal */}
+      <SensorHistoryModal
+        device={historyDevice}
+        isOpen={!!historyDevice}
+        onClose={() => setHistoryDevice(null)}
+      />
 
       {/* Info Modal */}
       <InfoModal

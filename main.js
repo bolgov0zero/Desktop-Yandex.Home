@@ -3,9 +3,28 @@
 import { app, BrowserWindow, ipcMain, Menu, Tray } from 'electron'; // <-- Добавлен Menu, Tray
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 // Импорт yandex-api.js
-import * as yandexApi from './yandex-api.js'; 
+import * as yandexApi from './yandex-api.js';
 import keytar from 'keytar';
+
+// History storage
+let historyFilePath = null;
+let sensorHistory = {}; // { deviceId: [{ts, temperature?, humidity?}] }
+
+function loadHistory() {
+    if (!historyFilePath) return;
+    try {
+        if (fs.existsSync(historyFilePath)) {
+            sensorHistory = JSON.parse(fs.readFileSync(historyFilePath, 'utf8'));
+        }
+    } catch(e) { sensorHistory = {}; }
+}
+
+function saveHistory() {
+    if (!historyFilePath) return;
+    try { fs.writeFileSync(historyFilePath, JSON.stringify(sensorHistory)); } catch(e) {}
+}
 
 // Установка __dirname и __filename для ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -69,11 +88,6 @@ function createTray() {
     
     appTray.setToolTip('Управление Умным Домом Яндекс');
 
-    // Левый клик — меню избранного (без открытия окна)
-    appTray.on('click', () => {
-        showFavoritesMenu();
-    });
-
     // Правый клик — Открыть / Закрыть
     appTray.on('right-click', () => {
         const menu = Menu.buildFromTemplate([
@@ -108,13 +122,15 @@ function buildFavoriteMenuItems() {
         const isDevice = item.type === 'device';
         const isToggleableDevice = isDevice && item.isToggleable;
 
-        const label = item.sensorValue ? `${item.name}  ${item.sensorValue}` : item.name;
+        const label = item.sensorValue
+            ? (item.roomName ? `${item.name}\n${item.roomName}  ${item.sensorValue}` : `${item.name}  ${item.sensorValue}`)
+            : (item.roomName ? `${item.name}\n${item.roomName}` : item.name);
 
         if (isToggleableDevice) {
             return {
                 label,
-                type: 'checkbox',
-                checked: !!item.isOn,
+                type: 'normal',
+                accelerator: item.isOn ? '●' : '○',
                 click: () => {
                     if (mainWindow && !mainWindow.isDestroyed()) {
                         mainWindow.webContents.send('tray:execute-command', 'TOGGLE_DEVICE', item.id, item.isOn);
@@ -139,23 +155,17 @@ function buildFavoriteMenuItems() {
     });
 }
 
-// Показывает меню избранного по левому клику
-function showFavoritesMenu() {
-    if (!appTray) return;
-    const items = buildFavoriteMenuItems();
-    const template = items.length > 0
-        ? items
-        : [{ label: 'Нет избранного', enabled: false }];
-    appTray.popUpContextMenu(Menu.buildFromTemplate(template));
-}
-
-// Обновляет внутренний contextMenu (нужен для платформ без popUpContextMenu)
+// Обновляет contextMenu трея
 function updateTrayMenu() {
     if (!appTray) return;
-    // На macOS меню показывается через popUpContextMenu, setContextMenu не используется
-    // Для других платформ оставляем полное меню через setContextMenu
-    if (process.platform !== 'darwin') {
-        const items = buildFavoriteMenuItems();
+    const items = buildFavoriteMenuItems();
+    const favoritesMenu = Menu.buildFromTemplate(
+        items.length > 0 ? items : [{ label: 'Нет избранного', enabled: false }]
+    );
+    if (process.platform === 'darwin') {
+        // На macOS используем setContextMenu для нативного показа по левому клику
+        appTray.setContextMenu(favoritesMenu);
+    } else {
         const contextMenu = Menu.buildFromTemplate([
             { label: 'Открыть', click: () => { if (mainWindow && !mainWindow.isDestroyed()) { mainWindow.show(); mainWindow.focus(); } else { createWindow(); } } },
             ...(items.length > 0 ? [{ type: 'separator' }, ...items] : []),
@@ -331,6 +341,29 @@ if (!gotTheLock) {
             favoritesData = favorites;
             updateTrayMenu(); // Обновляем меню при получении новых данных
         });
+
+        // History handlers
+        historyFilePath = path.join(app.getPath('userData'), 'sensor_history.json');
+        loadHistory();
+
+        ipcMain.on('history:record', (event, data) => {
+            const { deviceId, ts, temperature, humidity } = data;
+            if (!sensorHistory[deviceId]) sensorHistory[deviceId] = [];
+            const entry = { ts };
+            if (temperature !== undefined) entry.temperature = temperature;
+            if (humidity !== undefined) entry.humidity = humidity;
+            sensorHistory[deviceId].push(entry);
+            // Keep max 2016 entries per device (7 days at 5min intervals)
+            if (sensorHistory[deviceId].length > 2016) {
+                sensorHistory[deviceId] = sensorHistory[deviceId].slice(-2016);
+            }
+            // Remove entries older than 7 days
+            const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+            sensorHistory[deviceId] = sensorHistory[deviceId].filter(e => e.ts > sevenDaysAgo);
+            saveHistory();
+        });
+
+        ipcMain.handle('history:getData', () => sensorHistory);
 
     });
 

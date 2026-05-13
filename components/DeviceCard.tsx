@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { YandexDevice } from '../types';
+import React, { useState, useRef, useEffect } from 'react';
+import { YandexDevice, FavoriteProperty, FavoritePropertyKey } from '../types';
 import { getIconForDevice, localizeUnit } from '../constants';
-import { Loader2, Power, Star, Settings } from 'lucide-react';
+import { Loader2, Power, Star, Settings, X } from 'lucide-react';
 
 interface DeviceCardProps {
   device: YandexDevice;
@@ -9,17 +9,47 @@ interface DeviceCardProps {
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
   onOpenSettings?: (device: YandexDevice) => void;
+  onOpenHistory?: (device: YandexDevice) => void;
+  onTogglePropertyFavorite?: (deviceId: string, property: FavoritePropertyKey) => void;
+  favoriteProperties?: FavoriteProperty[];
+  singleProperty?: 'temperature' | 'humidity';
   compact?: boolean;
   roomName?: string;
 }
 
-export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavorite, onToggleFavorite, onOpenSettings, compact, roomName }) => {
+export const DeviceCard: React.FC<DeviceCardProps> = ({
+  device,
+  onToggle,
+  isFavorite,
+  onToggleFavorite,
+  onOpenSettings,
+  onOpenHistory,
+  onTogglePropertyFavorite,
+  favoriteProperties,
+  singleProperty,
+  compact,
+  roomName,
+}) => {
   const [loading, setLoading] = useState(false);
+  const [showFavMenu, setShowFavMenu] = useState(false);
+  const favMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close fav menu on outside click
+  useEffect(() => {
+    if (!showFavMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (favMenuRef.current && !favMenuRef.current.contains(e.target as Node)) {
+        setShowFavMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showFavMenu]);
 
   // Проверяем, является ли устройство кондиционером или термостатом
   const isThermostat = device.type === 'devices.types.thermostat.ac' || device.type === 'devices.types.thermostat';
-  
-  // Проверяем, является ли устройство лампочкой (поддерживаем все типы: light, light.lamp, light.ceiling, light.strip и т.д.)
+
+  // Проверяем, является ли устройство лампочкой
   const isLight = device.type.startsWith('devices.types.light');
 
   // Проверяем, является ли устройство вентилятором
@@ -27,16 +57,14 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
 
   // Find the on_off capability
   const onOffCapability = device.capabilities.find(c => c.type === 'devices.capabilities.on_off');
-  
-  // If no on_off capability, device might be a sensor or unsupported for simple toggle
+
   const isToggleable = !!onOffCapability;
-  // Если у девайса явно есть состояние и onOffCapability ИЛИ это умная колонка
-  const isOn = onOffCapability?.state?.value === true || 
-                device.type.toLowerCase().includes('smart_speaker') || 
+  const isOn = onOffCapability?.state?.value === true ||
+                device.type.toLowerCase().includes('smart_speaker') ||
                 device.type.toLowerCase().includes('hub') ||
                 device.type.toLowerCase().includes('other');
 
-  // Sensor detection: ищем свойства с текущим значением
+  // Sensor detection
   const sensorProperty = (device.properties ?? []).find(prop => {
     const anyProp = prop as any;
     const type: string | undefined = anyProp?.type;
@@ -63,19 +91,17 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
     return type === 'devices.properties.float' && instance === 'humidity';
   }) as any | undefined;
 
-  // Get temperature value and unit
   const temperatureValue: number | null = temperatureProperty?.state?.value ?? null;
-  const temperatureUnit = temperatureProperty?.parameters?.unit 
-    ? localizeUnit(temperatureProperty.parameters.unit) 
-    : temperatureProperty?.state?.unit 
+  const temperatureUnit = temperatureProperty?.parameters?.unit
+    ? localizeUnit(temperatureProperty.parameters.unit)
+    : temperatureProperty?.state?.unit
       ? localizeUnit(temperatureProperty.state.unit)
       : ' °C';
 
-  // Get humidity value and unit
   const humidityValue: number | null = humidityProperty?.state?.value ?? null;
-  const humidityUnit = humidityProperty?.parameters?.unit 
+  const humidityUnit = humidityProperty?.parameters?.unit
     ? localizeUnit(humidityProperty.parameters.unit)
-    : humidityProperty?.state?.unit 
+    : humidityProperty?.state?.unit
       ? localizeUnit(humidityProperty.state.unit)
       : ' %';
 
@@ -88,10 +114,8 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
     sensorProperty?.parameters?.unit ?? sensorProperty?.state?.unit;
   const propertyType: string | undefined = sensorProperty?.type;
 
-  // Check if this is an event property that needs localization
   const isEventProperty = propertyType === 'devices.properties.event';
-  
-  // Localize event status: find the Russian name from parameters.events array
+
   let localizedEventValue: string | null = null;
   if (isEventProperty && typeof rawSensorValue === 'string') {
     const events = (sensorProperty as any)?.parameters?.events as Array<{ value: string; name: string }> | undefined;
@@ -101,21 +125,17 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
         localizedEventValue = matchingEvent.name;
       }
     }
-    // Fallback to original value if no matching event found
     if (!localizedEventValue) {
       localizedEventValue = rawSensorValue;
     }
   }
 
-  // Localize the unit code to a user-friendly display string (for float properties)
   const localizedUnit = localizeUnit(rawSensorUnit);
-  
-  // Fallback to instance-based unit if no unit code is provided
+
   const resolvedUnit =
     localizedUnit ||
     (sensorInstance === 'humidity' ? ' %' : sensorInstance === 'temperature' ? ' °C' : '');
 
-  // Format sensor value: use localized event name for events, or formatted number/string with unit for floats
   const formattedSensorValue = isEventProperty && localizedEventValue
     ? localizedEventValue
     : typeof rawSensorValue === 'number'
@@ -123,6 +143,10 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
     : typeof rawSensorValue === 'string'
     ? `${rawSensorValue}${resolvedUnit ?? ''}`
     : null;
+
+  // Determine if sensor has both temp and humidity (for selective favorites)
+  const hasBothTempHumidity = temperatureValue !== null && humidityValue !== null;
+  const showFavMenuOption = isSensor && hasBothTempHumidity && !!onTogglePropertyFavorite && compact;
 
   const handleClick = async () => {
     if (!isToggleable || loading) return;
@@ -132,7 +156,6 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
       await onToggle(device.id, isOn);
     } catch (err) {
       console.error(err);
-      // Parent component handles the global error alert, but we stop loading here
     } finally {
       setLoading(false);
     }
@@ -149,20 +172,88 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
   const icon = getIconForDevice(device.type);
 
   if (compact) {
+    const handleStarClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (showFavMenuOption) {
+        setShowFavMenu(prev => !prev);
+      } else {
+        onToggleFavorite(device.id);
+      }
+    };
+
     const favoriteBtn = (
-      <div
-        onClick={(e) => { e.stopPropagation(); onToggleFavorite(device.id); }}
-        className="shrink-0 cursor-pointer text-yellow-500 dark:text-accent"
-        title="Убрать из избранного"
-      >
-        <Star className="w-4 h-4 fill-current" />
+      <div className="relative shrink-0" ref={favMenuRef}>
+        <div
+          onClick={handleStarClick}
+          className="cursor-pointer text-yellow-500 dark:text-accent"
+          title={showFavMenuOption ? 'Настроить избранное' : 'Убрать из избранного'}
+        >
+          <Star className="w-4 h-4 fill-current" />
+        </div>
+        {showFavMenu && (
+          <div className="absolute left-0 top-6 z-50 bg-white dark:bg-surface border border-gray-200 dark:border-white/10 rounded-xl shadow-xl p-1 min-w-[160px]">
+            <div className="flex items-center justify-between px-2 py-1 mb-1">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Добавить в избранное</span>
+              <button onClick={(e) => { e.stopPropagation(); setShowFavMenu(false); }} className="text-slate-400 hover:text-slate-700 dark:hover:text-white">
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleFavorite(device.id); setShowFavMenu(false); }}
+              className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
+            >
+              Целиком
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onTogglePropertyFavorite!(device.id, 'temperature'); setShowFavMenu(false); }}
+              className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
+            >
+              Температура
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onTogglePropertyFavorite!(device.id, 'humidity'); setShowFavMenu(false); }}
+              className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
+            >
+              Влажность
+            </button>
+          </div>
+        )}
       </div>
     );
 
     // Sensor compact: name + room on left, temperature/humidity stacked on right
     if (isSensor) {
+      // If singleProperty, show only one metric
+      if (singleProperty) {
+        return (
+          <div
+            className="flex items-center justify-between gap-3 px-3 py-2.5 bg-white dark:bg-surface border border-gray-200 dark:border-white/5 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+            onClick={() => onOpenHistory?.(device)}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              {favoriteBtn}
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{device.name}</p>
+                {roomName && <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{roomName}</p>}
+              </div>
+            </div>
+            <div className="text-right shrink-0 text-xs text-slate-600 dark:text-slate-300">
+              {singleProperty === 'temperature' && temperatureValue !== null && (
+                <p>Температура: <span className="font-semibold">{temperatureValue}{temperatureUnit}</span></p>
+              )}
+              {singleProperty === 'humidity' && humidityValue !== null && (
+                <p>Влажность: <span className="font-semibold">{humidityValue}{humidityUnit}</span></p>
+              )}
+            </div>
+          </div>
+        );
+      }
+
       return (
-        <div className="flex items-center justify-between gap-3 px-3 py-2.5 bg-white dark:bg-surface border border-gray-200 dark:border-white/5 rounded-xl">
+        <div
+          className="flex items-center justify-between gap-3 px-3 py-2.5 bg-white dark:bg-surface border border-gray-200 dark:border-white/5 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          onClick={() => onOpenHistory?.(device)}
+        >
           <div className="flex items-center gap-2 min-w-0">
             {favoriteBtn}
             <div className="min-w-0">
@@ -197,7 +288,13 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
           }`}
       >
         <div className="flex items-center gap-2 min-w-0">
-          {favoriteBtn}
+          <div
+            onClick={(e) => { e.stopPropagation(); onToggleFavorite(device.id); }}
+            className="shrink-0 cursor-pointer text-yellow-500 dark:text-accent"
+            title="Убрать из избранного"
+          >
+            <Star className="w-4 h-4 fill-current" />
+          </div>
           <div className="min-w-0">
             <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{device.name}</p>
             {roomName && <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{roomName}</p>}
@@ -214,12 +311,10 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
     <button
       onClick={handleClick}
       onContextMenu={handleContextMenu}
-      // Отключаем только во время загрузки, чтобы датчики без on_off
-      // всё равно можно было добавлять/убирать из избранного.
       disabled={loading}
       className={`
         relative overflow-hidden group
-        flex flex-col p-4 gap-3
+        flex flex-col p-3 gap-2
         border rounded-xl text-left
         transition-all duration-200 ease-out
         w-full
@@ -233,7 +328,7 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
         }
       `}
     >
-	
+
 	<div className="absolute top-3 right-3 z-20 flex items-center gap-2">
       {/* Settings button for thermostat, light and fan */}
       {(isThermostat || isLight || isFan) && onOpenSettings && (
@@ -252,7 +347,7 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
       {/* Favorite star */}
 	  <div
           onClick={(e) => {
-              e.stopPropagation(); // Важно: предотвращаем переключение устройства
+              e.stopPropagation();
               onToggleFavorite(device.id);
           }}
           className={`
@@ -264,7 +359,7 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
           <Star className="w-4 h-4 fill-current" />
       </div>
     </div>
-	
+
       <div className="flex items-start justify-between w-full">
         <div
           className={`
@@ -283,16 +378,16 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
         `}
         >
           {loading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             React.cloneElement(icon as React.ReactElement<{ className?: string }>, {
-              className: 'w-5 h-5',
+              className: 'w-4 h-4',
             })
           )}
         </div>
       </div>
 
-      <div className="mt-2">
+      <div className="mt-1">
         <p className="font-medium text-slate-900 dark:text-slate-100 line-clamp-1 text-sm">
           {device.name}
         </p>
@@ -319,7 +414,7 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
           )}
         </div>
       </div>
-	  
+
 	  <div className="flex justify-end">
         {isToggleable && (
              <div className={`

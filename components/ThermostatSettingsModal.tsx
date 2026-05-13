@@ -230,11 +230,11 @@ export const ThermostatSettingsModal: React.FC<ThermostatSettingsModalProps> = (
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/50 dark:bg-black/70 flex items-center justify-center backdrop-blur-sm">
-      <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-300">
+      <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/10 rounded-2xl p-4 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-300">
         {/* Header */}
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
               Настройки климата
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -250,11 +250,11 @@ export const ThermostatSettingsModal: React.FC<ThermostatSettingsModalProps> = (
         </div>
 
         {/* Settings */}
-        <div className="space-y-6 mb-6">
+        <div className="space-y-4 mb-4">
           {/* Temperature Range Slider */}
           {temperatureRange && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Температура
                 <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">({temperature} °C)</span>
               </label>
@@ -276,7 +276,7 @@ export const ThermostatSettingsModal: React.FC<ThermostatSettingsModalProps> = (
           {/* Thermostat Mode */}
           {thermostatCap && thermostatModes.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Режим термостата
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -301,7 +301,7 @@ export const ThermostatSettingsModal: React.FC<ThermostatSettingsModalProps> = (
           {/* Swing Mode */}
           {swingCap && swingModes.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Вращение вентилятора
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -326,7 +326,7 @@ export const ThermostatSettingsModal: React.FC<ThermostatSettingsModalProps> = (
           {/* Fan Speed */}
           {fanSpeedCap && fanSpeedModes.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Скорость вращения
               </label>
               <div className="grid grid-cols-3 gap-2">

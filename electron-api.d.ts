@@ -22,6 +22,10 @@ export interface IYandexApi {
     
     // Retry attempt event listener
     onRetryAttempt: (callback: (data: {attempt: number, maxAttempts: number, message: string}) => void) => () => void;
+
+    // History data
+    getSensorHistory: () => Promise<Record<string, Array<{ts: number; temperature?: number; humidity?: number}>>>;
+    recordSensorData: (data: {deviceId: string; ts: number; temperature?: number; humidity?: number}) => void;
 }
 
 declare global {

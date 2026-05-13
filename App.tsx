@@ -3,7 +3,7 @@ import { TokenInput } from './components/TokenInput';
 import { Dashboard } from './components/Dashboard';
 import { UpdateNotificationModal } from './components/UpdateNotificationModal';
 import { fetchUserInfo, executeScenario, toggleDevice, toggleGroup, setDeviceMode } from './services/yandexIoT';
-import { AppState, YandexUserInfoResponse, YandexDevice, YandexRoom, YandexScenario, TrayMenuItem, TrayItemType, YandexHousehold } from './types'; 
+import { AppState, YandexUserInfoResponse, YandexDevice, YandexRoom, YandexScenario, TrayMenuItem, TrayItemType, YandexHousehold, FavoriteProperty, FavoritePropertyKey } from './types';
 import { formatSensorValue, formatSensorValueForTray } from './constants';
 import { AlertCircle, X } from 'lucide-react';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -84,6 +84,9 @@ function App() {
   // Состояние избранного, загруженное из LocalStorage
   const [favoriteDeviceIds, setFavoriteDeviceIds] = useState<string[]>(getFavorites('favoriteDeviceIds'));
   const [favoriteScenarioIds, setFavoriteScenarioIds] = useState<string[]>(getFavorites('favoriteScenarioIds'));
+  const [favoriteProperties, setFavoriteProperties] = useState<FavoriteProperty[]>(() => {
+    try { const s = localStorage.getItem('favoriteProperties'); return s ? JSON.parse(s) : []; } catch { return []; }
+  });
   
   // Состояние автозапуска
   const [isAutostartEnabled, setIsAutostartEnabled] = useState<boolean>(false);
@@ -178,6 +181,7 @@ function App() {
      		const hasChanges = hasDeviceStateChanges(userData, sortedData);
      		
      		setUserData(sortedData);
+            recordSensorHistory(sortedData);
             const households = sortedData.households || [];
             setActiveHouseholdId(prev => {
               if (prev && households.some(h => h.id === prev)) {
@@ -215,7 +219,7 @@ function App() {
     			setIsRefreshing(false);
     		}
     	}
- 	}, [showNotification, stableSortData, userData, hasDeviceStateChanges]);
+ 	}, [showNotification, stableSortData, userData, hasDeviceStateChanges, recordSensorHistory]);
   
 	// Функция для инициализации и авторизации (меняет appState)
 	const loadData = useCallback(async (apiToken: string) => {
@@ -225,6 +229,7 @@ function App() {
 		  const data = await fetchUserInfo(apiToken);
 		  const sortedData = stableSortData(data);
 		  setUserData(sortedData);
+          recordSensorHistory(sortedData);
           const households = sortedData.households || [];
           setActiveHouseholdId(prev => {
             if (prev && households.some(h => h.id === prev)) {
@@ -418,11 +423,36 @@ function App() {
 
 	const handleToggleScenarioFavorite = useCallback((id: string) => {
 		setFavoriteScenarioIds(prevIds => {
-			const newIds = prevIds.includes(id) 
+			const newIds = prevIds.includes(id)
 				? prevIds.filter(itemId => itemId !== id)
 				: [...prevIds, id];
 			setFavorites('favoriteScenarioIds', newIds);
 			return newIds;
+		});
+	}, []);
+
+	const handleTogglePropertyFavorite = useCallback((deviceId: string, property: FavoritePropertyKey) => {
+		setFavoriteProperties(prev => {
+			const exists = prev.find(fp => fp.deviceId === deviceId && fp.property === property);
+			const next = exists ? prev.filter(fp => !(fp.deviceId === deviceId && fp.property === property)) : [...prev, { deviceId, property }];
+			try { localStorage.setItem('favoriteProperties', JSON.stringify(next)); } catch {}
+			return next;
+		});
+	}, []);
+
+	const recordSensorHistory = useCallback((data: YandexUserInfoResponse) => {
+		const ts = Date.now();
+		data.devices.forEach(device => {
+			const hasOnOff = device.capabilities.some(c => c.type === 'devices.capabilities.on_off');
+			const props = device.properties ?? [];
+			if (hasOnOff || props.length === 0) return;
+			const tempProp = props.find((p: any) => p.parameters?.instance === 'temperature' || p.state?.instance === 'temperature') as any;
+			const humProp = props.find((p: any) => p.parameters?.instance === 'humidity' || p.state?.instance === 'humidity') as any;
+			const temperature = tempProp?.state?.value;
+			const humidity = humProp?.state?.value;
+			if (temperature !== undefined || humidity !== undefined) {
+				yandexApi.recordSensorData({ deviceId: device.id, ts, temperature, humidity });
+			}
 		});
 	}, []);
 
@@ -549,11 +579,13 @@ const getTrayMenuItems = useCallback((
 
     const deviceMap = new Map(data.devices.map(d => [d.id, d]));
     const scenarioMap = new Map(data.scenarios.map(s => [s.id, s]));
-    
+
+    const getRoomForDevice = (deviceId: string) => data?.rooms.find(r => r.devices.includes(deviceId));
+
     // 1. Избранные устройства
     const favDeviceItems: TrayMenuItem[] = favDevices
         .map(id => deviceMap.get(id))
-        .filter((d): d is YandexDevice => !!d) 
+        .filter((d): d is YandexDevice => !!d)
         .map(device => {
             const onOffCapability = device.capabilities.find(c => c.type === 'devices.capabilities.on_off');
             const isToggleable = !!onOffCapability;
@@ -575,6 +607,7 @@ const getTrayMenuItems = useCallback((
                 isToggleable: isToggleable,
                 isOn: onOffCapability?.state?.value === true,
                 sensorValue: sensorValue,
+                roomName: getRoomForDevice(device.id)?.name,
             };
         });
 
@@ -734,6 +767,8 @@ useEffect(() => {
           onToggleScenarioFavorite={handleToggleScenarioFavorite}
           isAutostartEnabled={isAutostartEnabled}
           onToggleAutostart={handleToggleAutostart}
+          favoriteProperties={favoriteProperties}
+          onTogglePropertyFavorite={handleTogglePropertyFavorite}
         />
         {updateInfo && (
           <UpdateNotificationModal
