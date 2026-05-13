@@ -273,7 +273,14 @@ if (!gotTheLock) {
             mainWindow.hide();
         }
         createTray(); // Создаем Tray
-        
+
+        // Polling timer in main process — fires every 60s regardless of window visibility
+        setInterval(() => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.send('main:poll');
+            }
+        }, 60000);
+
         ipcMain.handle('yandex-api:fetchUserInfo', async (event, token) => {
             try {
                 return await yandexApi.fetchUserInfo(token, (attempt, maxAttempts) => {

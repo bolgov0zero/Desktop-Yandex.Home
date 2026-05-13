@@ -654,18 +654,15 @@ useEffect(() => {
 	}, [handleToggleDevice, handleExecuteScenario, token]);  // Зависимости корректны
 
 	// --- 5. useEffect: Автоматическая синхронизация (polling) ---
+	// Timer lives in main process so it fires even when window is hidden
 	useEffect(() => {
-		if (!token) return;
-
-		const POLLING_INTERVAL = 60000; // 60 секунд
-
-		const pollingInterval = setInterval(() => {
+		if (!token || !window.api?.onMainPoll) return;
+		const unsubscribe = window.api.onMainPoll(() => {
 			refreshDashboardData(token, true).catch(err => {
 				console.error('Polling sync error:', err);
 			});
-		}, POLLING_INTERVAL);
-
-		return () => { clearInterval(pollingInterval); };
+		});
+		return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
 	}, [token, refreshDashboardData]);
 
   // Global Notification Toast Component

@@ -49,4 +49,10 @@ contextBridge.exposeInMainWorld('api', {
     // History data
     getSensorHistory: () => ipcRenderer.invoke('history:getData'),
     recordSensorData: (data) => ipcRenderer.send('history:record', data),
+
+    // Main-process polling trigger
+    onMainPoll: (callback) => {
+        ipcRenderer.on('main:poll', () => callback());
+        return () => ipcRenderer.removeAllListeners('main:poll');
+    },
 });

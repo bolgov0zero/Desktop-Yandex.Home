@@ -26,6 +26,9 @@ export interface IYandexApi {
     // History data
     getSensorHistory: () => Promise<Record<string, Array<{ts: number; temperature?: number; humidity?: number}>>>;
     recordSensorData: (data: {deviceId: string; ts: number; temperature?: number; humidity?: number}) => void;
+
+    // Main-process polling trigger
+    onMainPoll: (callback: () => void) => () => void;
 }
 
 declare global {
