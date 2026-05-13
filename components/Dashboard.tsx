@@ -9,12 +9,10 @@ import { GroupLightSettingsModal } from './GroupLightSettingsModal';
 import { GroupThermostatSettingsModal } from './GroupThermostatSettingsModal';
 import { FanSettingsModal } from './FanSettingsModal';
 import { GroupFanSettingsModal } from './GroupFanSettingsModal';
-import { InfoModal } from './InfoModal';
 import { SensorHistoryModal } from './SensorHistoryModal';
-import { LogOut, Home, Layers, MonitorSmartphone, RefreshCw, X, Star, Sun, Moon, ChevronRight, ChevronDown, ChevronUp, Power, Info, Building2, Zap, LayoutGrid } from 'lucide-react';
+import { LogOut, Home, Layers, MonitorSmartphone, RefreshCw, X, Star, Sun, Moon, ChevronRight, ChevronDown, ChevronUp, Power, Building2, Zap, LayoutGrid } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { isLightDevice, isLightGroup } from '../constants';
-import packageJson from '../package.json';
 
 const DEFAULT_HOME_NAME = 'Мой Дом';
 
@@ -62,7 +60,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onTogglePropertyFavorite,
 }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showInfoModal, setShowInfoModal] = useState(false);
   const [showAllDevicesModal, setShowAllDevicesModal] = useState(false);
   const [historyDevice, setHistoryDevice] = useState<YandexDevice | null>(null);
   const [selectedThermostatDevice, setSelectedThermostatDevice] = useState<YandexDevice | null>(null);
@@ -624,13 +621,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
             <button
-              onClick={() => setShowInfoModal(true)}
-              className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              title="О программе"
-            >
-              <Info className="w-5 h-5" />
-            </button>
-            <button
               onClick={() => setShowConfirmModal(true)}
               className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               title="Выйти"
@@ -1039,12 +1029,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
         onClose={() => setHistoryDevice(null)}
       />
 
-      {/* Info Modal */}
-      <InfoModal
-        isOpen={showInfoModal}
-        onClose={() => setShowInfoModal(false)}
-        currentVersion={packageJson.version}
-      />
 	  
     </div>
   );

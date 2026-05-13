@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { TokenInput } from './components/TokenInput';
 import { Dashboard } from './components/Dashboard';
-import { UpdateNotificationModal } from './components/UpdateNotificationModal';
 import { fetchUserInfo, executeScenario, toggleDevice, toggleGroup, setDeviceMode } from './services/yandexIoT';
 import { AppState, YandexUserInfoResponse, YandexDevice, YandexRoom, YandexScenario, TrayMenuItem, TrayItemType, YandexHousehold, FavoriteProperty, FavoritePropertyKey } from './types';
 import { formatSensorValue, formatSensorValueForTray } from './constants';
@@ -30,47 +29,6 @@ const setFavorites = (key: string, ids: string[]): void => {
         console.error("Error saving favorites to localStorage", e);
     }
 };
-
-// --- Вспомогательная функция для сравнения версий ---
-const compareVersions = (v1: string, v2: string): number => {
-    const parts1 = v1.replace(/^v/, '').split('.').map(Number);
-    const parts2 = v2.replace(/^v/, '').split('.').map(Number);
-
-    for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-      const p1 = parts1[i] || 0;
-      const p2 = parts2[i] || 0;
-      if (p1 > p2) return 1;
-      if (p1 < p2) return -1;
-    }
-    return 0;
-};
-
-// --- Вспомогательная функция для проверки обновлений ---
-const checkForUpdates = async (): Promise<{latestVersion: string, releaseUrl: string, releaseDate: string} | null> => {
-    try {
-      const response = await fetch(
-        'https://api.github.com/repos/onegamerstory/Desktop-Yandex.Home-App/releases/latest'
-      );
-      if (!response.ok) {
-        throw new Error('Не удалось получить информацию о последней версии');
-      }
-      const data = await response.json();
-      const latestVersion = data.tag_name || null;
-      const currentVersion = packageJson.version;
-      
-      if (latestVersion && compareVersions(latestVersion, currentVersion) > 0) {
-        return {
-          latestVersion,
-          releaseUrl: data.html_url,
-          releaseDate: new Date(data.published_at).toLocaleDateString('ru-RU'),
-        };
-      }
-      return null;
-    } catch (err) {
-      console.error('Ошибка при проверке обновлений:', err);
-      return null;
-    }
-};
 function App() {
   // --- Состояние приложения ---
   const [appState, setAppState] = useState<AppState>(AppState.LOADING);
@@ -95,8 +53,6 @@ function App() {
   const [retryInfo, setRetryInfo] = useState<{attempt: number, maxAttempts: number, message: string} | null>(null);
 
   // Состояние для уведомления об обновлении
-  const [showUpdateNotification, setShowUpdateNotification] = useState<boolean>(false);
-  const [updateInfo, setUpdateInfo] = useState<{latestVersion: string, releaseUrl: string, releaseDate: string} | null>(null);
 
 	// --- Уведомления ---
 	const showNotification = useCallback((message: string, type: 'error' | 'success' = 'error') => {
@@ -474,16 +430,6 @@ function App() {
         console.error('Ошибка при загрузке состояния автозапуска:', error);
       }
 
-      // Проверяем наличие обновлений при запуске приложения (асинхронно, не блокируем)
-      checkForUpdates().then(newUpdateInfo => {
-        if (newUpdateInfo) {
-          console.log('[App] Update available:', newUpdateInfo.latestVersion);
-          setUpdateInfo(newUpdateInfo);
-          setShowUpdateNotification(true);
-        }
-      }).catch(error => {
-        console.error('Ошибка при проверке обновлений:', error);
-      });
       
       if (storedToken) {
         console.log('[App] Token found, loading user data...');
@@ -790,16 +736,6 @@ useEffect(() => {
           favoriteProperties={favoriteProperties}
           onTogglePropertyFavorite={handleTogglePropertyFavorite}
         />
-        {updateInfo && (
-          <UpdateNotificationModal
-            isOpen={showUpdateNotification}
-            onClose={() => setShowUpdateNotification(false)}
-            currentVersion={packageJson.version}
-            latestVersion={updateInfo.latestVersion}
-            releaseUrl={updateInfo.releaseUrl}
-            releaseDate={updateInfo.releaseDate}
-          />
-        )}
         <NotificationToast />
       </ThemeProvider>
     );

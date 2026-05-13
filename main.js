@@ -138,11 +138,10 @@ function buildFavoriteMenuItems() {
         const sublabel = item.roomName || undefined;
 
         if (isToggleableDevice) {
+            const deviceLabel = `${label}\t${item.isOn ? '●' : '○'}`;
             return {
-                label,
+                label: deviceLabel,
                 sublabel,
-                accelerator: item.isOn ? '●' : '○',
-                registerAccelerator: false,
                 type: 'normal',
                 click: () => {
                     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -165,12 +164,11 @@ function buildFavoriteMenuItems() {
             };
         }
 
-        // Sensor — значение справа
+        // Sensor — значение справа через таб
+        const sensorLabel = item.sensorValue ? `${label}\t${item.sensorValue}` : label;
         return {
-            label,
+            label: sensorLabel,
             sublabel,
-            accelerator: item.sensorValue || undefined,
-            registerAccelerator: false,
             type: 'normal',
             enabled: false,
         };
