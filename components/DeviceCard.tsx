@@ -166,7 +166,8 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
           <div className="flex items-center gap-2 min-w-0">
             {favoriteBtn}
             <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{roomName ?? device.name}</p>
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{device.name}</p>
+              {roomName && <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{roomName}</p>}
             </div>
           </div>
           <div className="text-right shrink-0 text-xs text-slate-600 dark:text-slate-300 space-y-0.5">
@@ -197,7 +198,10 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
       >
         <div className="flex items-center gap-2 min-w-0">
           {favoriteBtn}
-          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{roomName ?? device.name}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{device.name}</p>
+            {roomName && <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{roomName}</p>}
+          </div>
         </div>
         <span className={`text-xs font-semibold shrink-0 ${isOn ? 'text-purple-600 dark:text-primary' : 'text-gray-400 dark:text-slate-500'}`}>
           {loading ? '...' : isOn ? 'Вкл' : 'Выкл'}
