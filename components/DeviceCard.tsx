@@ -201,12 +201,12 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({
                 {roomName && <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{roomName}</p>}
               </div>
             </div>
-            <div className="text-right shrink-0 text-sm font-semibold text-slate-700 dark:text-slate-200">
+            <div className="text-right shrink-0 text-xs text-slate-600 dark:text-slate-300">
               {singleProperty === 'temperature' && temperatureValue !== null && (
-                <span>{temperatureValue}{temperatureUnit}</span>
+                <p>Температура: <span className="font-semibold">{temperatureValue}{temperatureUnit}</span></p>
               )}
               {singleProperty === 'humidity' && humidityValue !== null && (
-                <span>{humidityValue}{humidityUnit}</span>
+                <p>Влажность: <span className="font-semibold">{humidityValue}{humidityUnit}</span></p>
               )}
             </div>
           </div>

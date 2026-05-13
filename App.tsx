@@ -566,10 +566,9 @@ const getTrayMenuItems = useCallback((
             const unit = prop.parameters?.unit === 'unit.temperature.celsius' ? ' °C'
                 : prop.parameters?.unit === 'unit.percent' ? ' %' : '';
             const sensorValue = value !== undefined ? `${value}${unit}` : null;
-            const label = fp.property === 'temperature' ? 'Температура' : 'Влажность';
             return {
                 id: `${fp.deviceId}-${fp.property}`,
-                name: `${device.name} (${label})`,
+                name: device.name,
                 type: 'device' as TrayItemType,
                 isToggleable: false,
                 sensorValue,
