@@ -616,39 +616,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-12">
-        
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-4">
-                <div className="p-3 bg-orange-50 dark:bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400"><Building2 className="w-6 h-6"/></div>
-                <div>
-                    <p className="text-sm text-slate-600 dark:text-secondary">Домов</p>
-                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{households.length}</p>
-                </div>
-            </div>
-            <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-4">
-                <div className="p-3 bg-blue-50 dark:bg-blue-500/10 rounded-lg text-blue-600 dark:text-blue-400"><Layers className="w-6 h-6"/></div>
-                <div>
-                    <p className="text-sm text-slate-600 dark:text-secondary">Комнат</p>
-                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{roomsForHome.length}</p>
-                </div>
-            </div>
-            <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-4">
-                <div className="p-3 bg-purple-50 dark:bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400"><Zap className="w-6 h-6"/></div>
-                <div>
-                    <p className="text-sm text-slate-600 dark:text-secondary">Сценариев</p>
-                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{activeScenarios.length}</p>
-                </div>
-            </div>
-            <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-4">
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400"><MonitorSmartphone className="w-6 h-6"/></div>
-                <div>
-                    <p className="text-sm text-slate-600 dark:text-secondary">Устройств</p>
-                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{devicesForHome.length}</p>
-                </div>
-            </div>
-        </div>
-		
+
 		{hasFavorites && ( // ВОССТАНОВИТЬ СЕКЦИЮ ИЗБРАННОГО
 			<section className="mb-8">
 				<div className="flex items-center gap-3 mb-4">
@@ -703,6 +671,37 @@ export const Dashboard: React.FC<DashboardProps> = ({
 			</section>
 		)}
 
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-4">
+                <div className="p-3 bg-orange-50 dark:bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400"><Building2 className="w-6 h-6"/></div>
+                <div>
+                    <p className="text-sm text-slate-600 dark:text-secondary">Домов</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{households.length}</p>
+                </div>
+            </div>
+            <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-4">
+                <div className="p-3 bg-blue-50 dark:bg-blue-500/10 rounded-lg text-blue-600 dark:text-blue-400"><Layers className="w-6 h-6"/></div>
+                <div>
+                    <p className="text-sm text-slate-600 dark:text-secondary">Комнат</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{roomsForHome.length}</p>
+                </div>
+            </div>
+            <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-4">
+                <div className="p-3 bg-purple-50 dark:bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400"><Zap className="w-6 h-6"/></div>
+                <div>
+                    <p className="text-sm text-slate-600 dark:text-secondary">Сценариев</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{activeScenarios.length}</p>
+                </div>
+            </div>
+            <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-4">
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400"><MonitorSmartphone className="w-6 h-6"/></div>
+                <div>
+                    <p className="text-sm text-slate-600 dark:text-secondary">Устройств</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{devicesForHome.length}</p>
+                </div>
+            </div>
+        </div>
 
         {/* Scenarios Section */}
         <section>
