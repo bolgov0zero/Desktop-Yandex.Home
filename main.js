@@ -26,6 +26,24 @@ function saveHistory() {
     try { fs.writeFileSync(historyFilePath, JSON.stringify(sensorHistory)); } catch(e) {}
 }
 
+// App settings (persisted)
+let settingsFilePath = null;
+
+function loadSettings() {
+    if (!settingsFilePath) return;
+    try {
+        if (fs.existsSync(settingsFilePath)) {
+            const s = JSON.parse(fs.readFileSync(settingsFilePath, 'utf8'));
+            if (s.pinnedSensorId !== undefined) pinnedSensorId = s.pinnedSensorId;
+        }
+    } catch(e) {}
+}
+
+function saveSettings() {
+    if (!settingsFilePath) return;
+    try { fs.writeFileSync(settingsFilePath, JSON.stringify({ pinnedSensorId })); } catch(e) {}
+}
+
 // Установка __dirname и __filename для ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -145,11 +163,9 @@ function buildFavoriteMenuItems() {
         const sublabel = item.roomName || undefined;
 
         if (isToggleableDevice) {
-            const status = item.isOn ? 'Включено' : 'Выключено';
-            const sublabelWithStatus = [item.roomName, status].filter(Boolean).join('   ');
             return {
-                label: item.name,
-                sublabel: sublabelWithStatus || status,
+                label: item.isOn ? `✓ ${item.name}` : item.name,
+                sublabel: item.roomName || undefined,
                 type: 'normal',
                 click: () => {
                     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -181,14 +197,13 @@ function buildFavoriteMenuItems() {
             type: 'normal',
             click: () => {
                 if (isPinned) {
-                    // Снимаем выбор
                     pinnedSensorId = null;
                     if (appTray) appTray.setTitle('');
                 } else {
-                    // Выбираем этот датчик
                     pinnedSensorId = item.id;
                     if (appTray) appTray.setTitle(item.titleValue || item.sensorValue || '');
                 }
+                saveSettings();
                 updateTrayMenu();
             },
         };
@@ -403,6 +418,8 @@ if (!gotTheLock) {
         // History handlers
         historyFilePath = path.join(app.getPath('userData'), 'sensor_history.json');
         loadHistory();
+        settingsFilePath = path.join(app.getPath('userData'), 'app_settings.json');
+        loadSettings();
 
         ipcMain.on('history:record', (event, data) => {
             const { deviceId, ts, temperature, humidity } = data;
