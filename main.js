@@ -108,31 +108,34 @@ function buildFavoriteMenuItems() {
         const isDevice = item.type === 'device';
         const isToggleableDevice = isDevice && item.isToggleable;
 
-        let label = item.name;
-        if (isDevice) {
-            if (item.sensorValue) {
-                label += `  ${item.sensorValue}`;
-            } else if (isToggleableDevice) {
-                label += item.isOn ? '  🟢' : '  🔴';
-            }
-        }
+        const label = item.sensorValue ? `${item.name}  ${item.sensorValue}` : item.name;
 
-        let clickAction = null;
         if (isToggleableDevice) {
-            clickAction = () => {
-                if (mainWindow && !mainWindow.isDestroyed()) {
-                    mainWindow.webContents.send('tray:execute-command', 'TOGGLE_DEVICE', item.id, item.isOn);
-                }
-            };
-        } else if (item.type === 'scenario') {
-            clickAction = () => {
-                if (mainWindow && !mainWindow.isDestroyed()) {
-                    mainWindow.webContents.send('tray:execute-command', 'EXECUTE_SCENARIO', item.id);
-                }
+            return {
+                label,
+                type: 'checkbox',
+                checked: !!item.isOn,
+                click: () => {
+                    if (mainWindow && !mainWindow.isDestroyed()) {
+                        mainWindow.webContents.send('tray:execute-command', 'TOGGLE_DEVICE', item.id, item.isOn);
+                    }
+                },
             };
         }
 
-        return { label, type: 'normal', enabled: !!clickAction, click: clickAction };
+        if (item.type === 'scenario') {
+            return {
+                label,
+                type: 'normal',
+                click: () => {
+                    if (mainWindow && !mainWindow.isDestroyed()) {
+                        mainWindow.webContents.send('tray:execute-command', 'EXECUTE_SCENARIO', item.id);
+                    }
+                },
+            };
+        }
+
+        return { label, type: 'normal', enabled: false };
     });
 }
 

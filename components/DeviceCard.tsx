@@ -203,9 +203,9 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
             {roomName && <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{roomName}</p>}
           </div>
         </div>
-        <span className={`text-xs font-semibold shrink-0 ${isOn ? 'text-purple-600 dark:text-primary' : 'text-gray-400 dark:text-slate-500'}`}>
-          {loading ? '...' : isOn ? 'Вкл' : 'Выкл'}
-        </span>
+        <div className={`shrink-0 w-8 h-4 rounded-full relative transition-colors duration-300 ${loading ? 'opacity-50' : ''} ${isOn ? 'bg-purple-500 dark:bg-primary' : 'bg-gray-300 dark:bg-slate-600'}`}>
+          <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all duration-300 ${isOn ? 'left-[1.1rem]' : 'left-0.5'}`} />
+        </div>
       </button>
     );
   }

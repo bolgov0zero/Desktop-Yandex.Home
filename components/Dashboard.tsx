@@ -716,56 +716,56 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* All Devices & Scenarios Modal */}
       {showAllDevicesModal && (
-        <div className="fixed inset-0 z-[90] bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-stretch justify-end">
-          <div className="bg-gray-50 dark:bg-background w-full max-w-3xl flex flex-col shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-[90] bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-6" onClick={() => setShowAllDevicesModal(false)}>
+          <div className="bg-gray-50 dark:bg-background w-full max-w-2xl max-h-full flex flex-col shadow-2xl overflow-hidden rounded-2xl" onClick={e => e.stopPropagation()}>
             {/* Modal header */}
-            <div className="sticky top-0 z-10 bg-white/80 dark:bg-surface/80 backdrop-blur-md border-b border-gray-200 dark:border-white/5 px-6 py-4 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <LayoutGrid className="w-5 h-5 text-purple-600 dark:text-primary" />
-                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Все устройства и сценарии</h2>
+            <div className="bg-white/80 dark:bg-surface/80 backdrop-blur-md border-b border-gray-200 dark:border-white/5 px-4 py-3 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="w-4 h-4 text-purple-600 dark:text-primary" />
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Все устройства и сценарии</h2>
               </div>
               <button
                 onClick={() => setShowAllDevicesModal(false)}
-                className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-600 dark:text-slate-400"
+                className="p-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-600 dark:text-slate-400"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-10">
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
               {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-3">
-                  <div className="p-2 bg-orange-50 dark:bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400"><Building2 className="w-5 h-5"/></div>
-                  <div><p className="text-xs text-slate-600 dark:text-secondary">Домов</p><p className="text-lg font-bold text-slate-900 dark:text-slate-100">{households.length}</p></div>
+              <div className="grid grid-cols-4 gap-2">
+                <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-3 rounded-xl flex items-center gap-2">
+                  <div className="p-1.5 bg-orange-50 dark:bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400"><Building2 className="w-4 h-4"/></div>
+                  <div><p className="text-xs text-slate-600 dark:text-secondary">Домов</p><p className="text-base font-bold text-slate-900 dark:text-slate-100">{households.length}</p></div>
                 </div>
-                <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 dark:bg-blue-500/10 rounded-lg text-blue-600 dark:text-blue-400"><Layers className="w-5 h-5"/></div>
-                  <div><p className="text-xs text-slate-600 dark:text-secondary">Комнат</p><p className="text-lg font-bold text-slate-900 dark:text-slate-100">{roomsForHome.length}</p></div>
+                <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-3 rounded-xl flex items-center gap-2">
+                  <div className="p-1.5 bg-blue-50 dark:bg-blue-500/10 rounded-lg text-blue-600 dark:text-blue-400"><Layers className="w-4 h-4"/></div>
+                  <div><p className="text-xs text-slate-600 dark:text-secondary">Комнат</p><p className="text-base font-bold text-slate-900 dark:text-slate-100">{roomsForHome.length}</p></div>
                 </div>
-                <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-3">
-                  <div className="p-2 bg-purple-50 dark:bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400"><Zap className="w-5 h-5"/></div>
-                  <div><p className="text-xs text-slate-600 dark:text-secondary">Сценариев</p><p className="text-lg font-bold text-slate-900 dark:text-slate-100">{activeScenarios.length}</p></div>
+                <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-3 rounded-xl flex items-center gap-2">
+                  <div className="p-1.5 bg-purple-50 dark:bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400"><Zap className="w-4 h-4"/></div>
+                  <div><p className="text-xs text-slate-600 dark:text-secondary">Сценариев</p><p className="text-base font-bold text-slate-900 dark:text-slate-100">{activeScenarios.length}</p></div>
                 </div>
-                <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-4 rounded-xl flex items-center gap-3">
-                  <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400"><MonitorSmartphone className="w-5 h-5"/></div>
-                  <div><p className="text-xs text-slate-600 dark:text-secondary">Устройств</p><p className="text-lg font-bold text-slate-900 dark:text-slate-100">{devicesForHome.length}</p></div>
+                <div className="bg-white dark:bg-surface border border-gray-200 dark:border-white/5 p-3 rounded-xl flex items-center gap-2">
+                  <div className="p-1.5 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400"><MonitorSmartphone className="w-4 h-4"/></div>
+                  <div><p className="text-xs text-slate-600 dark:text-secondary">Устройств</p><p className="text-base font-bold text-slate-900 dark:text-slate-100">{devicesForHome.length}</p></div>
                 </div>
               </div>
 
               {/* Scenarios */}
               <section>
-                <div className="flex items-center justify-between mb-4">
-                  <button onClick={toggleScenarios} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    {isScenariosCollapsed ? <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-600 dark:text-slate-400" />}
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Сценарии</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <button onClick={toggleScenarios} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+                    {isScenariosCollapsed ? <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />}
+                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Сценарии</h3>
                   </button>
-                  <span className="text-sm text-slate-600 dark:text-secondary bg-white dark:bg-surface px-3 py-1 rounded-full border border-gray-200 dark:border-white/5">{activeScenarios.length} активных</span>
+                  <span className="text-xs text-slate-600 dark:text-secondary bg-white dark:bg-surface px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/5">{activeScenarios.length} активных</span>
                 </div>
                 {!isScenariosCollapsed && (
                   activeScenarios.length === 0
-                    ? <div className="text-center py-10 border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-2xl"><p className="text-slate-500 dark:text-slate-400">Нет активных сценариев</p></div>
-                    : <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    ? <div className="text-center py-6 border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-xl"><p className="text-sm text-slate-500 dark:text-slate-400">Нет активных сценариев</p></div>
+                    : <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                         {activeScenarios.map((scenario: YandexScenario) => (
                           <ScenarioCard key={scenario.id} scenario={scenario} onExecute={onExecuteScenario} isFavorite={favoriteScenarioIds.includes(scenario.id)} onToggleFavorite={onToggleScenarioFavorite} />
                         ))}
@@ -775,17 +775,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
               {/* Groups */}
               <section>
-                <div className="flex items-center justify-between mb-4">
-                  <button onClick={toggleGroups} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    {isGroupsCollapsed ? <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-600 dark:text-slate-400" />}
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Группы</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <button onClick={toggleGroups} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+                    {isGroupsCollapsed ? <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />}
+                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Группы</h3>
                   </button>
-                  <span className="text-sm text-slate-600 dark:text-secondary bg-white dark:bg-surface px-3 py-1 rounded-full border border-gray-200 dark:border-white/5">{groupsForHome.length} групп</span>
+                  <span className="text-xs text-slate-600 dark:text-secondary bg-white dark:bg-surface px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/5">{groupsForHome.length} групп</span>
                 </div>
                 {!isGroupsCollapsed && (
                   groupsForHome.length === 0
-                    ? <div className="text-center py-10 border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-2xl"><p className="text-slate-500 dark:text-slate-400">Нет групп</p></div>
-                    : <div className="space-y-4">
+                    ? <div className="text-center py-6 border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-xl"><p className="text-sm text-slate-500 dark:text-slate-400">Нет групп</p></div>
+                    : <div className="space-y-2">
                         {groupsForHome.map(group => (
                           <GroupCard
                             key={group.id}
@@ -817,17 +817,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
               {/* Devices */}
               <section>
-                <div className="flex items-center justify-between mb-4">
-                  <button onClick={toggleDevices} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    {isDevicesCollapsed ? <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-600 dark:text-slate-400" />}
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Устройства</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <button onClick={toggleDevices} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+                    {isDevicesCollapsed ? <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />}
+                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Устройства</h3>
                   </button>
-                  <span className="text-sm text-slate-600 dark:text-secondary bg-white dark:bg-surface px-3 py-1 rounded-full border border-gray-200 dark:border-white/5">{devicesForHome.length} устройств</span>
+                  <span className="text-xs text-slate-600 dark:text-secondary bg-white dark:bg-surface px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/5">{devicesForHome.length} устройств</span>
                 </div>
                 {!isDevicesCollapsed && (
-                  <div className="space-y-6">
+                  <div className="space-y-3">
                     {roomsForHome.length === 0 && devicesForHome.length > 0 && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {devicesForHome.map(device => (
                           <DeviceCard key={device.id} device={device} onToggle={onToggleDevice} isFavorite={favoriteDeviceIds.includes(device.id)} onToggleFavorite={onToggleDeviceFavorite}
                             onOpenSettings={(dev) => {
@@ -844,15 +844,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       if (roomDevices.length === 0) return null;
                       const isRoomCollapsed = collapsedRooms.has(room.id);
                       return (
-                        <div key={room.id} className="bg-gray-100 dark:bg-surface/30 border border-gray-200 dark:border-white/5 rounded-2xl p-5">
-                          <button onClick={() => toggleRoom(room.id)} className="w-full flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity">
+                        <div key={room.id} className="bg-gray-100 dark:bg-surface/30 border border-gray-200 dark:border-white/5 rounded-xl p-3">
+                          <button onClick={() => toggleRoom(room.id)} className="w-full flex items-center gap-1.5 mb-3 hover:opacity-80 transition-opacity">
                             {isRoomCollapsed ? <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />}
-                            <h4 className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                               <span className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-primary"></span>{room.name}
                             </h4>
                           </button>
                           {!isRoomCollapsed && (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                               {roomDevices.map(dev => (
                                 <DeviceCard key={dev.id} device={dev} onToggle={onToggleDevice} isFavorite={favoriteDeviceIds.includes(dev.id)} onToggleFavorite={onToggleDeviceFavorite}
                                   onOpenSettings={(device) => {
@@ -872,15 +872,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       const unassignedDevices = devicesForHome.filter(d => !assignedIds.has(d.id));
                       if (unassignedDevices.length === 0) return null;
                       return (
-                        <div className="bg-gray-100 dark:bg-surface/30 border border-gray-200 dark:border-white/5 rounded-2xl p-5">
-                          <button onClick={toggleUnassignedDevices} className="w-full flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity">
+                        <div className="bg-gray-100 dark:bg-surface/30 border border-gray-200 dark:border-white/5 rounded-xl p-3">
+                          <button onClick={toggleUnassignedDevices} className="w-full flex items-center gap-1.5 mb-3 hover:opacity-80 transition-opacity">
                             {isUnassignedDevicesCollapsed ? <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />}
-                            <h4 className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                               <span className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-primary"></span>Без комнаты
                             </h4>
                           </button>
                           {!isUnassignedDevicesCollapsed && (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                               {unassignedDevices.map(dev => (
                                 <DeviceCard key={dev.id} device={dev} onToggle={onToggleDevice} isFavorite={favoriteDeviceIds.includes(dev.id)} onToggleFavorite={onToggleDeviceFavorite}
                                   onOpenSettings={(device) => {
