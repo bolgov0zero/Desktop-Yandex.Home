@@ -36,22 +36,20 @@ function catmullRomToBezier(points: [number, number][]): string {
 
 const GAP_THRESHOLD = 30 * 60 * 1000; // 30 minutes
 
-function splitByGaps(points: [number, number][], timestamps: number[]): { segments: [number, number][][]; gaps: [[number, number], [number, number]][] } {
-  if (points.length === 0) return { segments: [], gaps: [] };
+function splitByGaps(points: [number, number][], timestamps: number[]): { segments: [number, number][][] } {
+  if (points.length === 0) return { segments: [] };
   const segments: [number, number][][] = [];
-  const gaps: [[number, number], [number, number]][] = [];
   let current: [number, number][] = [points[0]];
   for (let i = 1; i < points.length; i++) {
     if (timestamps[i] - timestamps[i - 1] > GAP_THRESHOLD) {
       segments.push(current);
-      gaps.push([points[i - 1], points[i]]);
       current = [points[i]];
     } else {
       current.push(points[i]);
     }
   }
   segments.push(current);
-  return { segments, gaps };
+  return { segments };
 }
 
 function formatHHMM(ts: number): string {
@@ -145,12 +143,11 @@ export const SensorHistoryModal: React.FC<SensorHistoryModalProps> = ({ device, 
     entries: HistoryEntry[],
     getValue: (e: HistoryEntry) => number,
     toY: (v: number) => number,
-    color: string,
-    dashed: boolean = false
+    color: string
   ) => {
     const pts: [number, number][] = entries.map(e => [toX(e.ts), toY(getValue(e))]);
     const timestamps = entries.map(e => e.ts);
-    const { segments, gaps } = splitByGaps(pts, timestamps);
+    const { segments } = splitByGaps(pts, timestamps);
 
     return (
       <>
@@ -163,19 +160,6 @@ export const SensorHistoryModal: React.FC<SensorHistoryModalProps> = ({ device, 
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
-          />
-        ))}
-        {gaps.map(([from, to], i) => (
-          <line
-            key={`gap-${i}`}
-            x1={from[0]}
-            y1={from[1]}
-            x2={to[0]}
-            y2={to[1]}
-            stroke={color}
-            strokeWidth={1.5}
-            strokeDasharray="4 4"
-            opacity={0.5}
           />
         ))}
       </>

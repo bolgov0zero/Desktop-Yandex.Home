@@ -134,14 +134,15 @@ function buildFavoriteMenuItems() {
         const isDevice = item.type === 'device';
         const isToggleableDevice = isDevice && item.isToggleable;
 
-        const label = item.name;
+        // sublabel: название комнаты под названием
         const sublabel = item.roomName || undefined;
 
         if (isToggleableDevice) {
-            const deviceLabel = `${label}\t${item.isOn ? '●' : '○'}`;
             return {
-                label: deviceLabel,
+                label: item.name,
                 sublabel,
+                accelerator: item.isOn ? '●' : '○',
+                registerAccelerator: false,
                 type: 'normal',
                 click: () => {
                     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -153,7 +154,7 @@ function buildFavoriteMenuItems() {
 
         if (item.type === 'scenario') {
             return {
-                label,
+                label: item.name,
                 sublabel,
                 type: 'normal',
                 click: () => {
@@ -164,11 +165,11 @@ function buildFavoriteMenuItems() {
             };
         }
 
-        // Sensor — значение справа через таб
-        const sensorLabel = item.sensorValue ? `${label}\t${item.sensorValue}` : label;
+        // Sensor — значение в sublabel рядом с комнатой
+        const sublabelWithValue = [item.roomName, item.sensorValue].filter(Boolean).join('   ');
         return {
-            label: sensorLabel,
-            sublabel,
+            label: item.name,
+            sublabel: sublabelWithValue || undefined,
             type: 'normal',
             enabled: false,
         };

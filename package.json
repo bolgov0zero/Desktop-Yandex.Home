@@ -1,5 +1,5 @@
 {
-  "name": "yandex-smart-home-control",
+  "name": "yahome",
   "private": true,
   "version": "1.6.5",
   "type": "module",
@@ -32,11 +32,11 @@
   
 
   "author": "История Одного Геймера <gamecuts0412@gmail.com>",
-  "description": "Yandex Smart Home Control Application",
+  "description": "YaHome — Yandex Smart Home Control",
   
   "build": {
-    "appId": "com.onegamerstory.smarthomecontrol",
-    "productName": "Yandex Smart Home Control",
+    "appId": "com.onegamerstory.yahome",
+    "productName": "YaHome",
     "artifactName": "${productName} Setup v${version}.${ext}",
     "icon": "resources/icon.png",
     "files": [
@@ -90,7 +90,7 @@
       "category": "Utility",
       "icon": "resources/icon.png",
       "maintainer": "История Одного Геймера <gamecuts0412@gmail.com>",
-      "description": "Yandex Smart Home Control Application",
+      "description": "YaHome — Yandex Smart Home Control",
       "executableName": "yandex-smart-home-control"
     }
   }

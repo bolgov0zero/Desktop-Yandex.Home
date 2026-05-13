@@ -645,26 +645,18 @@ useEffect(() => {
 
 	// --- 5. useEffect: Автоматическая синхронизация (polling) ---
 	useEffect(() => {
-		// Polling только когда пользователь на дашборде и есть токен
-		if (appState !== AppState.DASHBOARD || !token) {
-			return;
-		}
+		if (!token) return;
 
-		// Интервал синхронизации: 120 секунд
-		const POLLING_INTERVAL = 120000; // 120 секунд
+		const POLLING_INTERVAL = 60000; // 60 секунд
 
 		const pollingInterval = setInterval(() => {
-			// Тихая синхронизация без уведомлений и индикатора загрузки
 			refreshDashboardData(token, true).catch(err => {
 				console.error('Polling sync error:', err);
 			});
 		}, POLLING_INTERVAL);
 
-		// Очистка интервала при размонтировании или изменении зависимостей
-		return () => {
-			clearInterval(pollingInterval);
-		};
-	}, [appState, token, refreshDashboardData]);
+		return () => { clearInterval(pollingInterval); };
+	}, [token, refreshDashboardData]);
 
   // Global Notification Toast Component
   const NotificationToast = () => {
