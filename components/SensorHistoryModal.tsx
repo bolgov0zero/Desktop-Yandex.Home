@@ -38,6 +38,26 @@ function smoothPath(points: [number, number][], tension = 0.4): string {
   return d.join(' ');
 }
 
+// Downsample entries into at most maxBuckets time buckets by averaging values
+function bucketAverage(entries: HistoryEntry[], getValue: (e: HistoryEntry) => number, maxBuckets = 48): { ts: number; value: number }[] {
+  if (entries.length === 0) return [];
+  if (entries.length <= maxBuckets) return entries.map(e => ({ ts: e.ts, value: getValue(e) }));
+  const minTs = entries[0].ts;
+  const maxTs = entries[entries.length - 1].ts;
+  const bucketSize = (maxTs - minTs) / maxBuckets;
+  const result: { ts: number; value: number }[] = [];
+  for (let i = 0; i < maxBuckets; i++) {
+    const from = minTs + i * bucketSize;
+    const to = from + bucketSize;
+    const bucket = entries.filter(e => e.ts >= from && e.ts < to);
+    if (bucket.length === 0) continue;
+    const avg = bucket.reduce((s, e) => s + getValue(e), 0) / bucket.length;
+    const midTs = bucket.reduce((s, e) => s + e.ts, 0) / bucket.length;
+    result.push({ ts: midTs, value: avg });
+  }
+  return result;
+}
+
 const GAP_THRESHOLD = 30 * 60 * 1000;
 
 function splitByGaps(points: [number, number][], timestamps: number[]): [number, number][][] {
@@ -143,15 +163,15 @@ export const SensorHistoryModal: React.FC<SensorHistoryModalProps> = ({ device, 
     color: string,
     gradientId: string
   ) => {
-    const pts: [number, number][] = entries.map(e => [toX(e.ts), toY(getValue(e))]);
-    const timestamps = entries.map(e => e.ts);
+    const bucketed = bucketAverage(entries, getValue);
+    const pts: [number, number][] = bucketed.map(b => [toX(b.ts), toY(b.value)]);
+    const timestamps = bucketed.map(b => b.ts);
     const segments = splitByGaps(pts, timestamps);
 
     return (
       <>
         {segments.map((seg, i) => {
           const linePath = smoothPath(seg);
-          // Area path: line + drop to bottom + back
           const firstX = seg[0][0];
           const lastX = seg[seg.length - 1][0];
           const areaPath = `${linePath} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
@@ -162,10 +182,6 @@ export const SensorHistoryModal: React.FC<SensorHistoryModalProps> = ({ device, 
             </g>
           );
         })}
-        {/* Dots at data points */}
-        {pts.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r={3} fill={color} opacity={0.85} />
-        ))}
       </>
     );
   };
