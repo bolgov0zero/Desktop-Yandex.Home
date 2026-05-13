@@ -2,7 +2,8 @@ name: Build Desktop App Installers (CI)
 
 on:
   push:
-    # Рабочий процесс запускается ТОЛЬКО при пуше тега, соответствующего паттерну vX.Y.Z
+    branches:
+      - main
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
 
@@ -16,7 +17,7 @@ jobs:
     # Используем матрицу, чтобы запустить одни и те же шаги на разных ОС
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-latest]
     
     runs-on: ${{ matrix.os }}
     
