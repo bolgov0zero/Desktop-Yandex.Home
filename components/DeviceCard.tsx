@@ -149,31 +149,60 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
   const icon = getIconForDevice(device.type);
 
   if (compact) {
-    const readingText = temperatureValue !== null || humidityValue !== null
-      ? [
-          temperatureValue !== null ? `${temperatureValue}${temperatureUnit}` : null,
-          humidityValue !== null ? `${humidityValue}${humidityUnit}` : null,
-        ].filter(Boolean).join(' · ')
-      : isSensor && formattedSensorValue
-        ? formattedSensorValue
-        : isOn ? 'Вкл' : 'Выкл';
+    const favoriteBtn = (
+      <div
+        onClick={(e) => { e.stopPropagation(); onToggleFavorite(device.id); }}
+        className="shrink-0 cursor-pointer text-yellow-500 dark:text-accent"
+        title="Убрать из избранного"
+      >
+        <Star className="w-4 h-4 fill-current" />
+      </div>
+    );
 
-    return (
-      <div className="flex items-center justify-between gap-2 px-3 py-2 bg-white dark:bg-surface border border-gray-200 dark:border-white/5 rounded-xl">
-        <div className="flex items-center gap-2 min-w-0">
-          <div
-            onClick={(e) => { e.stopPropagation(); onToggleFavorite(device.id); }}
-            className="shrink-0 cursor-pointer text-yellow-500 dark:text-accent"
-            title="Убрать из избранного"
-          >
-            <Star className="w-4 h-4 fill-current" />
+    // Sensor compact: name + room on left, temperature/humidity stacked on right
+    if (isSensor) {
+      return (
+        <div className="flex items-center justify-between gap-3 px-3 py-2.5 bg-white dark:bg-surface border border-gray-200 dark:border-white/5 rounded-xl">
+          <div className="flex items-center gap-2 min-w-0">
+            {favoriteBtn}
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{roomName ?? device.name}</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{roomName ?? device.name}</p>
+          <div className="text-right shrink-0 text-xs text-slate-600 dark:text-slate-300 space-y-0.5">
+            {temperatureValue !== null && (
+              <p>Температура: <span className="font-semibold">{temperatureValue}{temperatureUnit}</span></p>
+            )}
+            {humidityValue !== null && (
+              <p>Влажность: <span className="font-semibold">{humidityValue}{humidityUnit}</span></p>
+            )}
+            {temperatureValue === null && humidityValue === null && formattedSensorValue && (
+              <p className="font-semibold">{formattedSensorValue}</p>
+            )}
           </div>
         </div>
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 shrink-0">{readingText}</p>
-      </div>
+      );
+    }
+
+    // Device compact: clickable tile, color highlight, вкл/выкл status
+    return (
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border transition-all duration-200 text-left
+          ${isOn
+            ? 'bg-purple-50 dark:bg-primary/20 border-purple-300 dark:border-primary/50'
+            : 'bg-white dark:bg-surface border-gray-200 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-slate-700/50'
+          }`}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          {favoriteBtn}
+          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{roomName ?? device.name}</p>
+        </div>
+        <span className={`text-xs font-semibold shrink-0 ${isOn ? 'text-purple-600 dark:text-primary' : 'text-gray-400 dark:text-slate-500'}`}>
+          {loading ? '...' : isOn ? 'Вкл' : 'Выкл'}
+        </span>
+      </button>
     );
   }
 

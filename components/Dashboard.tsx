@@ -307,6 +307,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   );
   const favoriteDevices = devicesForHome.filter(d => favoriteDeviceIds.includes(d.id));
 
+  const isSensorDevice = (device: YandexDevice) =>
+    !device.capabilities.some(c => c.type === 'devices.capabilities.on_off') &&
+    (device.properties ?? []).length > 0;
+
+  const favoriteSensors = favoriteDevices.filter(isSensorDevice);
+  const favoriteOtherDevices = favoriteDevices.filter(d => !isSensorDevice(d));
+
   const hasFavorites = favoriteScenarios.length > 0 || favoriteDevices.length > 0;
 
   const getRoomName = (deviceId: string): string | undefined => {
@@ -630,36 +637,74 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">
         {hasFavorites ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {favoriteScenarios.map(scenario => (
-              <ScenarioCard
-                key={scenario.id}
-                scenario={scenario}
-                onExecute={onExecuteScenario}
-                isFavorite={true}
-                onToggleFavorite={onToggleScenarioFavorite}
-              />
-            ))}
-            {favoriteDevices.map(device => (
-              <DeviceCard
-                key={device.id}
-                device={device}
-                onToggle={onToggleDevice}
-                isFavorite={true}
-                onToggleFavorite={onToggleDeviceFavorite}
-                compact={true}
-                roomName={getRoomName(device.id)}
-                onOpenSettings={(dev) => {
-                  if (isLightDevice(dev.type)) {
-                    handleOpenLightSettings(dev);
-                  } else if (dev.type === 'devices.types.ventilation.fan') {
-                    handleOpenFanSettings(dev);
-                  } else {
-                    handleOpenThermostatSettings(dev);
-                  }
-                }}
-              />
-            ))}
+          <div className="space-y-6">
+            {/* Сценарии */}
+            {favoriteScenarios.length > 0 && (
+              <section>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 px-1">Сценарии</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {favoriteScenarios.map(scenario => (
+                    <ScenarioCard
+                      key={scenario.id}
+                      scenario={scenario}
+                      onExecute={onExecuteScenario}
+                      isFavorite={true}
+                      onToggleFavorite={onToggleScenarioFavorite}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Датчики */}
+            {favoriteSensors.length > 0 && (
+              <section>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 px-1">Датчики</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {favoriteSensors.map(device => (
+                    <DeviceCard
+                      key={device.id}
+                      device={device}
+                      onToggle={onToggleDevice}
+                      isFavorite={true}
+                      onToggleFavorite={onToggleDeviceFavorite}
+                      compact={true}
+                      roomName={getRoomName(device.id)}
+                      onOpenSettings={(dev) => {
+                        if (isLightDevice(dev.type)) handleOpenLightSettings(dev);
+                        else if (dev.type === 'devices.types.ventilation.fan') handleOpenFanSettings(dev);
+                        else handleOpenThermostatSettings(dev);
+                      }}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Устройства */}
+            {favoriteOtherDevices.length > 0 && (
+              <section>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 px-1">Устройства</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {favoriteOtherDevices.map(device => (
+                    <DeviceCard
+                      key={device.id}
+                      device={device}
+                      onToggle={onToggleDevice}
+                      isFavorite={true}
+                      onToggleFavorite={onToggleDeviceFavorite}
+                      compact={true}
+                      roomName={getRoomName(device.id)}
+                      onOpenSettings={(dev) => {
+                        if (isLightDevice(dev.type)) handleOpenLightSettings(dev);
+                        else if (dev.type === 'devices.types.ventilation.fan') handleOpenFanSettings(dev);
+                        else handleOpenThermostatSettings(dev);
+                      }}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         ) : (
           <div className="text-center py-20 text-slate-500 dark:text-slate-400">
