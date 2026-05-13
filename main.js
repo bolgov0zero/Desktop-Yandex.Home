@@ -134,16 +134,15 @@ function buildFavoriteMenuItems() {
         const isDevice = item.type === 'device';
         const isToggleableDevice = isDevice && item.isToggleable;
 
-        // Label — только название устройства
-        const label = item.sensorValue ? `${item.name}  ${item.sensorValue}` : item.name;
-        // sublabel — название комнаты (показывается под основным текстом на macOS)
+        const label = item.name;
         const sublabel = item.roomName || undefined;
 
         if (isToggleableDevice) {
-            const statusLabel = item.isOn ? `${label}  ●` : `${label}  ○`;
             return {
-                label: statusLabel,
+                label,
                 sublabel,
+                accelerator: item.isOn ? '●' : '○',
+                registerAccelerator: false,
                 type: 'normal',
                 click: () => {
                     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -166,7 +165,15 @@ function buildFavoriteMenuItems() {
             };
         }
 
-        return { label, sublabel, type: 'normal', enabled: false };
+        // Sensor — значение справа
+        return {
+            label,
+            sublabel,
+            accelerator: item.sensorValue || undefined,
+            registerAccelerator: false,
+            type: 'normal',
+            enabled: false,
+        };
     });
 }
 
