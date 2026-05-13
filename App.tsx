@@ -168,6 +168,22 @@ function App() {
 		return false;
 	}, []);
 
+	const recordSensorHistory = useCallback((data: YandexUserInfoResponse) => {
+		const ts = Date.now();
+		data.devices.forEach(device => {
+			const hasOnOff = device.capabilities.some(c => c.type === 'devices.capabilities.on_off');
+			const props = device.properties ?? [];
+			if (hasOnOff || props.length === 0) return;
+			const tempProp = props.find((p: any) => p.parameters?.instance === 'temperature' || p.state?.instance === 'temperature') as any;
+			const humProp = props.find((p: any) => p.parameters?.instance === 'humidity' || p.state?.instance === 'humidity') as any;
+			const temperature = tempProp?.state?.value;
+			const humidity = humProp?.state?.value;
+			if (temperature !== undefined || humidity !== undefined) {
+				yandexApi.recordSensorData({ deviceId: device.id, ts, temperature, humidity });
+			}
+		});
+	}, []);
+
 	// Функция для тихого фонового обновления данных (не сбрасывает scroll)
   const refreshDashboardData = useCallback(async (apiToken: string, silent: boolean = false) => {
 		if (!silent) {
@@ -437,22 +453,6 @@ function App() {
 			const next = exists ? prev.filter(fp => !(fp.deviceId === deviceId && fp.property === property)) : [...prev, { deviceId, property }];
 			try { localStorage.setItem('favoriteProperties', JSON.stringify(next)); } catch {}
 			return next;
-		});
-	}, []);
-
-	const recordSensorHistory = useCallback((data: YandexUserInfoResponse) => {
-		const ts = Date.now();
-		data.devices.forEach(device => {
-			const hasOnOff = device.capabilities.some(c => c.type === 'devices.capabilities.on_off');
-			const props = device.properties ?? [];
-			if (hasOnOff || props.length === 0) return;
-			const tempProp = props.find((p: any) => p.parameters?.instance === 'temperature' || p.state?.instance === 'temperature') as any;
-			const humProp = props.find((p: any) => p.parameters?.instance === 'humidity' || p.state?.instance === 'humidity') as any;
-			const temperature = tempProp?.state?.value;
-			const humidity = humProp?.state?.value;
-			if (temperature !== undefined || humidity !== undefined) {
-				yandexApi.recordSensorData({ deviceId: device.id, ts, temperature, humidity });
-			}
 		});
 	}, []);
 
