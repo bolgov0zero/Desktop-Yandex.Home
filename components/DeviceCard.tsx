@@ -9,9 +9,11 @@ interface DeviceCardProps {
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
   onOpenSettings?: (device: YandexDevice) => void;
+  compact?: boolean;
+  roomName?: string;
 }
 
-export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavorite, onToggleFavorite, onOpenSettings }) => {
+export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavorite, onToggleFavorite, onOpenSettings, compact, roomName }) => {
   const [loading, setLoading] = useState(false);
 
   // Проверяем, является ли устройство кондиционером или термостатом
@@ -146,6 +148,36 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
 
   const icon = getIconForDevice(device.type);
 
+  if (compact) {
+    const readingText = temperatureValue !== null || humidityValue !== null
+      ? [
+          temperatureValue !== null ? `${temperatureValue}${temperatureUnit}` : null,
+          humidityValue !== null ? `${humidityValue}${humidityUnit}` : null,
+        ].filter(Boolean).join(' · ')
+      : isSensor && formattedSensorValue
+        ? formattedSensorValue
+        : isOn ? 'Вкл' : 'Выкл';
+
+    return (
+      <div className="flex items-center justify-between gap-2 px-3 py-2 bg-white dark:bg-surface border border-gray-200 dark:border-white/5 rounded-xl">
+        <div className="flex items-center gap-2 min-w-0">
+          <div
+            onClick={(e) => { e.stopPropagation(); onToggleFavorite(device.id); }}
+            className="shrink-0 cursor-pointer text-yellow-500 dark:text-accent"
+            title="Убрать из избранного"
+          >
+            <Star className="w-4 h-4 fill-current" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{device.name}</p>
+            {roomName && <p className="text-xs text-gray-400 dark:text-slate-500 truncate">{roomName}</p>}
+          </div>
+        </div>
+        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 shrink-0">{readingText}</p>
+      </div>
+    );
+  }
+
   return (
     <button
       onClick={handleClick}
@@ -238,10 +270,10 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({ device, onToggle, isFavo
           ) : temperatureValue !== null || humidityValue !== null ? (
             <>
               {temperatureValue !== null && (
-                <p>🌡️ Температура: <span className="font-medium text-slate-700 dark:text-slate-300">{temperatureValue}{temperatureUnit}</span></p>
+                <p>Температура: <span className="font-medium text-slate-700 dark:text-slate-300">{temperatureValue}{temperatureUnit}</span></p>
               )}
               {humidityValue !== null && (
-                <p>💧 Влажность: <span className="font-medium text-slate-700 dark:text-slate-300">{humidityValue}{humidityUnit}</span></p>
+                <p>Влажность: <span className="font-medium text-slate-700 dark:text-slate-300">{humidityValue}{humidityUnit}</span></p>
               )}
             </>
           ) : (

@@ -308,6 +308,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const hasFavorites = favoriteScenarios.length > 0 || favoriteDevices.length > 0;
 
+  const getRoomName = (deviceId: string): string | undefined => {
+    const room = roomsForHome.find(r => r.devices.includes(deviceId));
+    return room?.name;
+  };
+
   const handleOpenThermostatSettings = useCallback((device: YandexDevice) => {
     setSelectedThermostatDevice(device);
   }, []);
@@ -646,14 +651,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
 				{favoriteDevices.length > 0 && (
 					<>
 						<h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mt-6 mb-3">Устройства ({favoriteDevices.length})</h3>
-						<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
 							{favoriteDevices.map(device => (
-								<DeviceCard 
-									key={device.id} 
-									device={device} 
-									onToggle={onToggleDevice} 
-									isFavorite={true} 
+								<DeviceCard
+									key={device.id}
+									device={device}
+									onToggle={onToggleDevice}
+									isFavorite={true}
 									onToggleFavorite={onToggleDeviceFavorite}
+									compact={true}
+									roomName={getRoomName(device.id)}
 									onOpenSettings={(dev) => {
 										if (isLightDevice(dev.type)) {
 											handleOpenLightSettings(dev);
