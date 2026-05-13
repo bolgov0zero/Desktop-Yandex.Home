@@ -272,6 +272,7 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({
   }
 
   return (
+    <>
     <button
       onClick={handleClick}
       onContextMenu={handleContextMenu}
@@ -422,5 +423,6 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({
       </div>,
       document.body
     )}
+    </>
   );
 };
