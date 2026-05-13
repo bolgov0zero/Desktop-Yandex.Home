@@ -138,11 +138,11 @@ function buildFavoriteMenuItems() {
         const sublabel = item.roomName || undefined;
 
         if (isToggleableDevice) {
+            const status = item.isOn ? 'Включено' : 'Выключено';
+            const sublabelWithStatus = [item.roomName, status].filter(Boolean).join('   ');
             return {
                 label: item.name,
-                sublabel,
-                accelerator: item.isOn ? '●' : '○',
-                registerAccelerator: false,
+                sublabel: sublabelWithStatus || status,
                 type: 'normal',
                 click: () => {
                     if (mainWindow && !mainWindow.isDestroyed()) {
