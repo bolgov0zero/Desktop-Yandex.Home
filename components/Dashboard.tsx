@@ -62,6 +62,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showAllDevicesModal, setShowAllDevicesModal] = useState(false);
   const [historyDevice, setHistoryDevice] = useState<YandexDevice | null>(null);
+  const [historyProperty, setHistoryProperty] = useState<'temperature' | 'humidity' | undefined>(undefined);
   const [selectedThermostatDevice, setSelectedThermostatDevice] = useState<YandexDevice | null>(null);
   const [selectedLightDevice, setSelectedLightDevice] = useState<YandexDevice | null>(null);
   const [selectedFanDevice, setSelectedFanDevice] = useState<YandexDevice | null>(null);
@@ -666,7 +667,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       onToggleFavorite={onToggleDeviceFavorite}
                       compact={true}
                       roomName={getRoomName(device.id)}
-                      onOpenHistory={(dev) => setHistoryDevice(dev)}
+                      onOpenHistory={(dev) => { setHistoryDevice(dev); setHistoryProperty(undefined); }}
                       onOpenSettings={(dev) => {
                         if (isLightDevice(dev.type)) handleOpenLightSettings(dev);
                         else if (dev.type === 'devices.types.ventilation.fan') handleOpenFanSettings(dev);
@@ -688,7 +689,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         compact={true}
                         roomName={getRoomName(device.id)}
                         singleProperty={fp.property as 'temperature' | 'humidity'}
-                        onOpenHistory={(dev) => setHistoryDevice(dev)}
+                        onOpenHistory={(dev) => { setHistoryDevice(dev); setHistoryProperty(fp.property as 'temperature' | 'humidity'); }}
                       />
                     );
                   })}
@@ -1026,7 +1027,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <SensorHistoryModal
         device={historyDevice}
         isOpen={!!historyDevice}
-        onClose={() => setHistoryDevice(null)}
+        onClose={() => { setHistoryDevice(null); setHistoryProperty(undefined); }}
+        singleProperty={historyProperty}
       />
 
 	  

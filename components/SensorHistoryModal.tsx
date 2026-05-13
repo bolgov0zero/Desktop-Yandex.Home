@@ -14,6 +14,7 @@ interface SensorHistoryModalProps {
   device: YandexDevice | null;
   isOpen: boolean;
   onClose: () => void;
+  singleProperty?: 'temperature' | 'humidity';
 }
 
 function catmullRomToBezier(points: [number, number][]): string {
@@ -59,7 +60,7 @@ function formatHHMM(ts: number): string {
 
 const PADDING = { top: 20, right: 20, bottom: 40, left: 40 };
 
-export const SensorHistoryModal: React.FC<SensorHistoryModalProps> = ({ device, isOpen, onClose }) => {
+export const SensorHistoryModal: React.FC<SensorHistoryModalProps> = ({ device, isOpen, onClose, singleProperty }) => {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -92,8 +93,8 @@ export const SensorHistoryModal: React.FC<SensorHistoryModalProps> = ({ device, 
 
   if (!isOpen || !device) return null;
 
-  const tempEntries = history.filter(e => e.temperature !== undefined);
-  const humEntries = history.filter(e => e.humidity !== undefined);
+  const tempEntries = singleProperty === 'humidity' ? [] : history.filter(e => e.temperature !== undefined);
+  const humEntries = singleProperty === 'temperature' ? [] : history.filter(e => e.humidity !== undefined);
 
   const hasTemp = tempEntries.length >= 2;
   const hasHum = humEntries.length >= 2;

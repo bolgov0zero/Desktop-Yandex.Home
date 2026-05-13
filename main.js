@@ -252,7 +252,12 @@ if (!gotTheLock) {
     app.whenReady().then(() => {
         Menu.setApplicationMenu(null);
 
+        // Запускаем скрыто если приложение открыто через автозапуск (openAsHidden)
+        const startHidden = app.getLoginItemSettings().wasOpenedAsHidden;
         createWindow();
+        if (startHidden) {
+            mainWindow.hide();
+        }
         createTray(); // Создаем Tray
         
         ipcMain.handle('yandex-api:fetchUserInfo', async (event, token) => {
@@ -346,7 +351,7 @@ if (!gotTheLock) {
         ipcMain.handle('autostart:setEnabled', async (event, enabled) => {
             app.setLoginItemSettings({
                 openAtLogin: enabled,
-                openAsHidden: false, // Можно изменить на true, если нужно запускать скрыто
+                openAsHidden: enabled, // Запускать скрыто (в трее) при автозапуске
             });
             return enabled;
         });
