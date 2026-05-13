@@ -118,19 +118,26 @@ function createTray() {
 
 // Строит список пунктов меню из избранного
 function buildFavoriteMenuItems() {
-    return favoritesData.map(item => {
+    // Датчики (без on_off, есть sensorValue или не isToggleable) — сверху
+    const sensors = favoritesData.filter(item => item.type === 'device' && !item.isToggleable);
+    const others = favoritesData.filter(item => item.type !== 'device' || item.isToggleable);
+    const sorted = [...sensors, ...others];
+
+    return sorted.map(item => {
         const isDevice = item.type === 'device';
         const isToggleableDevice = isDevice && item.isToggleable;
 
-        const label = item.sensorValue
-            ? (item.roomName ? `${item.name}\n${item.roomName}  ${item.sensorValue}` : `${item.name}  ${item.sensorValue}`)
-            : (item.roomName ? `${item.name}\n${item.roomName}` : item.name);
+        // Label — только название устройства
+        const label = item.sensorValue ? `${item.name}  ${item.sensorValue}` : item.name;
+        // sublabel — название комнаты (показывается под основным текстом на macOS)
+        const sublabel = item.roomName || undefined;
 
         if (isToggleableDevice) {
+            const statusLabel = item.isOn ? `${label}  ●` : `${label}  ○`;
             return {
-                label,
+                label: statusLabel,
+                sublabel,
                 type: 'normal',
-                accelerator: item.isOn ? '●' : '○',
                 click: () => {
                     if (mainWindow && !mainWindow.isDestroyed()) {
                         mainWindow.webContents.send('tray:execute-command', 'TOGGLE_DEVICE', item.id, item.isOn);
@@ -142,6 +149,7 @@ function buildFavoriteMenuItems() {
         if (item.type === 'scenario') {
             return {
                 label,
+                sublabel,
                 type: 'normal',
                 click: () => {
                     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -151,7 +159,7 @@ function buildFavoriteMenuItems() {
             };
         }
 
-        return { label, type: 'normal', enabled: false };
+        return { label, sublabel, type: 'normal', enabled: false };
     });
 }
 

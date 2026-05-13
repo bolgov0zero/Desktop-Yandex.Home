@@ -146,7 +146,7 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({
 
   // Determine if sensor has both temp and humidity (for selective favorites)
   const hasBothTempHumidity = temperatureValue !== null && humidityValue !== null;
-  const showFavMenuOption = isSensor && hasBothTempHumidity && !!onTogglePropertyFavorite && compact;
+  const showFavMenuOption = isSensor && hasBothTempHumidity && !!onTogglePropertyFavorite && !compact;
 
   const handleClick = async () => {
     if (!isToggleable || loading) return;
@@ -172,52 +172,13 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({
   const icon = getIconForDevice(device.type);
 
   if (compact) {
-    const handleStarClick = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (showFavMenuOption) {
-        setShowFavMenu(prev => !prev);
-      } else {
-        onToggleFavorite(device.id);
-      }
-    };
-
     const favoriteBtn = (
-      <div className="relative shrink-0" ref={favMenuRef}>
-        <div
-          onClick={handleStarClick}
-          className="cursor-pointer text-yellow-500 dark:text-accent"
-          title={showFavMenuOption ? 'Настроить избранное' : 'Убрать из избранного'}
-        >
-          <Star className="w-4 h-4 fill-current" />
-        </div>
-        {showFavMenu && (
-          <div className="absolute left-0 top-6 z-50 bg-white dark:bg-surface border border-gray-200 dark:border-white/10 rounded-xl shadow-xl p-1 min-w-[160px]">
-            <div className="flex items-center justify-between px-2 py-1 mb-1">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Добавить в избранное</span>
-              <button onClick={(e) => { e.stopPropagation(); setShowFavMenu(false); }} className="text-slate-400 hover:text-slate-700 dark:hover:text-white">
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); onToggleFavorite(device.id); setShowFavMenu(false); }}
-              className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
-            >
-              Целиком
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onTogglePropertyFavorite!(device.id, 'temperature'); setShowFavMenu(false); }}
-              className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
-            >
-              Температура
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onTogglePropertyFavorite!(device.id, 'humidity'); setShowFavMenu(false); }}
-              className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
-            >
-              Влажность
-            </button>
-          </div>
-        )}
+      <div
+        onClick={(e) => { e.stopPropagation(); onToggleFavorite(device.id); }}
+        className="shrink-0 cursor-pointer text-yellow-500 dark:text-accent"
+        title="Убрать из избранного"
+      >
+        <Star className="w-4 h-4 fill-current" />
       </div>
     );
 
@@ -345,18 +306,52 @@ export const DeviceCard: React.FC<DeviceCardProps> = ({
       )}
 
       {/* Favorite star */}
-	  <div
-          onClick={(e) => {
-              e.stopPropagation();
-              onToggleFavorite(device.id);
-          }}
-          className={`
-              p-1 rounded-full transition-all duration-200 cursor-pointer
-              ${isFavorite ? 'text-yellow-500 dark:text-accent bg-white/80 dark:bg-surface/80 hover:bg-white dark:hover:bg-surface' : 'text-gray-400 dark:text-slate-500 hover:text-yellow-500 dark:hover:text-accent opacity-0 group-hover:opacity-100'}
-          `}
-          title={isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
-      >
-          <Star className="w-4 h-4 fill-current" />
+      <div className="relative" ref={!compact ? favMenuRef : undefined}>
+        <div
+            onClick={(e) => {
+                e.stopPropagation();
+                if (showFavMenuOption) {
+                  setShowFavMenu(prev => !prev);
+                } else {
+                  onToggleFavorite(device.id);
+                }
+            }}
+            className={`
+                p-1 rounded-full transition-all duration-200 cursor-pointer
+                ${isFavorite ? 'text-yellow-500 dark:text-accent bg-white/80 dark:bg-surface/80 hover:bg-white dark:hover:bg-surface' : 'text-gray-400 dark:text-slate-500 hover:text-yellow-500 dark:hover:text-accent opacity-0 group-hover:opacity-100'}
+            `}
+            title={showFavMenuOption ? 'Добавить в избранное' : isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+        >
+            <Star className="w-4 h-4 fill-current" />
+        </div>
+        {showFavMenu && !compact && (
+          <div className="absolute right-0 top-7 z-50 bg-white dark:bg-surface border border-gray-200 dark:border-white/10 rounded-xl shadow-xl p-1 min-w-[160px]">
+            <div className="flex items-center justify-between px-2 py-1 mb-1">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Добавить в избранное</span>
+              <button onClick={(e) => { e.stopPropagation(); setShowFavMenu(false); }} className="text-slate-400 hover:text-slate-700 dark:hover:text-white">
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleFavorite(device.id); setShowFavMenu(false); }}
+              className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
+            >
+              Целиком
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onTogglePropertyFavorite!(device.id, 'temperature'); setShowFavMenu(false); }}
+              className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
+            >
+              Температура
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onTogglePropertyFavorite!(device.id, 'humidity'); setShowFavMenu(false); }}
+              className="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
+            >
+              Влажность
+            </button>
+          </div>
+        )}
       </div>
     </div>
 

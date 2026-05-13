@@ -662,8 +662,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </section>
             )}
 
-            {/* Датчики */}
-            {favoriteSensors.length > 0 && (
+            {/* Датчики (целиком) */}
+            {(favoriteSensors.length > 0 || favoriteProperties.length > 0) && (
               <section>
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 px-1">Датчики</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -676,8 +676,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       onToggleFavorite={onToggleDeviceFavorite}
                       compact={true}
                       roomName={getRoomName(device.id)}
-                      favoriteProperties={favoriteProperties}
-                      onTogglePropertyFavorite={onTogglePropertyFavorite}
                       onOpenHistory={(dev) => setHistoryDevice(dev)}
                       onOpenSettings={(dev) => {
                         if (isLightDevice(dev.type)) handleOpenLightSettings(dev);
@@ -686,6 +684,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       }}
                     />
                   ))}
+                  {/* Property-only favorites */}
+                  {favoriteProperties.map(fp => {
+                    const device = devicesForHome.find(d => d.id === fp.deviceId);
+                    if (!device || fp.property === 'all') return null;
+                    return (
+                      <DeviceCard
+                        key={`${fp.deviceId}-${fp.property}`}
+                        device={device}
+                        onToggle={onToggleDevice}
+                        isFavorite={false}
+                        onToggleFavorite={() => onTogglePropertyFavorite(fp.deviceId, fp.property)}
+                        compact={true}
+                        roomName={getRoomName(device.id)}
+                        singleProperty={fp.property as 'temperature' | 'humidity'}
+                        onOpenHistory={(dev) => setHistoryDevice(dev)}
+                      />
+                    );
+                  })}
                 </div>
               </section>
             )}
@@ -839,6 +855,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {devicesForHome.map(device => (
                           <DeviceCard key={device.id} device={device} onToggle={onToggleDevice} isFavorite={favoriteDeviceIds.includes(device.id)} onToggleFavorite={onToggleDeviceFavorite}
+                            onTogglePropertyFavorite={onTogglePropertyFavorite}
                             onOpenSettings={(dev) => {
                               if (isLightDevice(dev.type)) handleOpenLightSettings(dev);
                               else if (dev.type === 'devices.types.ventilation.fan') handleOpenFanSettings(dev);
@@ -864,6 +881,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                               {roomDevices.map(dev => (
                                 <DeviceCard key={dev.id} device={dev} onToggle={onToggleDevice} isFavorite={favoriteDeviceIds.includes(dev.id)} onToggleFavorite={onToggleDeviceFavorite}
+                                  onTogglePropertyFavorite={onTogglePropertyFavorite}
                                   onOpenSettings={(device) => {
                                     if (isLightDevice(device.type)) handleOpenLightSettings(device);
                                     else if (device.type === 'devices.types.ventilation.fan') handleOpenFanSettings(device);
@@ -892,6 +910,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                               {unassignedDevices.map(dev => (
                                 <DeviceCard key={dev.id} device={dev} onToggle={onToggleDevice} isFavorite={favoriteDeviceIds.includes(dev.id)} onToggleFavorite={onToggleDeviceFavorite}
+                                  onTogglePropertyFavorite={onTogglePropertyFavorite}
                                   onOpenSettings={(device) => {
                                     if (isLightDevice(device.type)) handleOpenLightSettings(device);
                                     else if (device.type === 'devices.types.ventilation.fan') handleOpenFanSettings(device);
