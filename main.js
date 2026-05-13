@@ -37,6 +37,7 @@ let mainWindow = null;
 let appTray = null; // Переменная для хранения экземпляра Tray
 let favoritesData = []; // Данные избранных устройств/сценариев
 let pinnedSensorId = null; // ID датчика, закреплённого в строке меню
+let activeFavoritesMenu = null; // Открытое меню избранного (для toggle)
 
 // --- 1. Обработка закрытия окна (свернуть в трей) ---
 const minimizeToTray = (event) => {
@@ -88,13 +89,19 @@ function createTray() {
     
     appTray.setToolTip('Управление Умным Домом Яндекс');
 
-    // Левый клик — меню избранного
+    // Левый клик — toggle меню избранного
     appTray.on('click', () => {
+        if (activeFavoritesMenu) {
+            activeFavoritesMenu.closePopup();
+            activeFavoritesMenu = null;
+            return;
+        }
         const items = buildFavoriteMenuItems();
-        const favoritesMenu = Menu.buildFromTemplate(
+        activeFavoritesMenu = Menu.buildFromTemplate(
             items.length > 0 ? items : [{ label: 'Нет избранного', enabled: false }]
         );
-        appTray.popUpContextMenu(favoritesMenu);
+        activeFavoritesMenu.on('menu-will-close', () => { activeFavoritesMenu = null; });
+        appTray.popUpContextMenu(activeFavoritesMenu);
     });
 
     // Правый клик — Открыть / Закрыть
