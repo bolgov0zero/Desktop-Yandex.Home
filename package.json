@@ -1,7 +1,7 @@
 {
   "name": "yahome",
   "private": true,
-  "version": "1.6.5",
+  "version": "1.7.0",
   "type": "module",
   "main": "main.js",
   "scripts": {
@@ -49,6 +49,12 @@
     ],
     "directories": {
       "output": "release"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "bolgov0zero",
+      "repo": "Desktop-Yandex.Home",
+      "releaseType": "release"
     },
     
     
